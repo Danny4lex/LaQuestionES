@@ -1,0 +1,28 @@
+{
+    "company": "Header",
+    "homeTitle": "Home View",
+    "aboutTitle": "About View",
+    "validations": {
+        "required": "The field {property} is required.",
+        "alpha": "The value is not alphabetical",
+        "alphaNum": "The value must be alpha-numeric",
+        "and": "The value does not match all of the provided validators",
+        "between": "The value must be between {min} and {max}",
+        "decimal": "Value must be decimal",
+        "email": "Value is not a valid email address",
+        "integer": "Value must be decimal",
+        "ipAddress": "The value is not a valid IP address",
+        "macAddress": "The value is not a valid MAC Addres",
+        "maxLength": "The maximum length allowed is {max}",
+        "maxValue": "The maximum value allowed is {max}",
+        "minLength": "This field should be at least {min} characters long",
+        "minValue": "The minimum value allowed is {min}",
+        "not": "The value does not match the provided validator",
+        "numeric": "Value must be numeric",
+        "or": "The value does not match any of the provided validators",
+        "requiredIf": "The value is required",
+        "requiredUnless": "Value must be decimal",
+        "sameAs": "The value must be equal to the {value",
+        "url": "The value is not a valid URL address"
+    }
+}

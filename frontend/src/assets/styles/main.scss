@@ -1,0 +1,21 @@
+// =============================================
+// VUETIFY
+// =============================================
+@import "vuetify/styles";
+
+// =============================================
+// ICONOS MDI
+// =============================================
+@import "@mdi/font/css/materialdesignicons.css";
+
+// =============================================
+// BOOTSTRAP UTILITIES (Opcional)
+// =============================================
+@import "bootstrap/dist/css/bootstrap-utilities.css";
+
+// =============================================
+// MIS ESTILOS PERSONALIZADOS
+// =============================================
+@import "./variables.scss";
+@import "./vuetify.scss";
+@import "./ui.scss";
