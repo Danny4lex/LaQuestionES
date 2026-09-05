@@ -1,0 +1,28 @@
+{
+    "company": "Encabezado",
+    "homeTitle": "Vista principal",
+    "aboutTitle": "Vista sobre nosotros",
+    "validations": {
+        "required": "Este campo es requerido",
+        "alpha": "El valor no es alfabético",
+        "alphaNum": "El valor no es alfanumérico",
+        "and": "El valor no coincide con todos los validadores proporcionados",
+        "between": "El valor debe estar entre {min} y {max}",
+        "decimal": "El valor debe ser decimal",
+        "email": "El valor no es una dirección de correo electrónico válida",
+        "integer": "El valor debe ser decimal",
+        "ipAddress": "El valor no es una dirección IP válida",
+        "macAddress": "El valor no es una dirección MAC válida",
+        "maxLength": "La longitud máxima permitida es {max}",
+        "maxValue": "El valor máximo permitido es {max}",
+        "minLength": "Este campo debe tener al menos {min} caracteres de largo",
+        "minValue": "El valor mínimo permitido es {min}",
+        "not": "El valor no coincide con el validador proporcionado",
+        "numeric": "El valor debe ser numérico",
+        "or": "El valor no coincide con ninguno de los validadores proporcionados",
+        "requiredIf": "El valor es requerido",
+        "requiredUnless": "El valor debe ser decimal",
+        "sameAs": "El valor debe ser igual al {valor}",
+        "url": "El valor no es una dirección URL válida"
+    }
+}
