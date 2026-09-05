@@ -1,0 +1,30 @@
+version: '3.7'
+
+networks:
+  nginx:
+    external: true
+
+services:
+  app:
+    image: nginx:latest
+    container_name: base-app-front
+    ports:
+      - 8080:8080
+    volumes:
+      - ./dist:/var/www/html
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      nginx:
+        aliases:
+          - base-app-front
+
+  npm:
+    image: node:18-alpine
+    working_dir: /usr/app
+    volumes:
+      - ./:/usr/app
+    entrypoint: [ 'npm' ]
+    networks:
+      nginx:
+        aliases:
+          - npm-base-app-front

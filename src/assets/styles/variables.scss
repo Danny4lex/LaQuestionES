@@ -1,0 +1,30 @@
+$background-color: #F4F6FD;
+$primary-color: #4880FF;        // botones y sombras
+$dark-blue: #2D52A7;            // azul institucional
+$secondary-color: #447AF4;      // botón secundario / variante de acción
+$kbd-border-radius: 10px;
+$text-field-border-radius: 8px;
+
+$white: #ffffff;
+$menu-color: #313945;
+
+// =============================================
+// GUÍA DE ESTILO — tokens agregados
+// =============================================
+$text-body: #374957;      // texto secundario / párrafos
+$text-strong: #313845;    // texto de mayor énfasis
+$text-number: #063456;    // números grandes de estadísticas
+$border-color: #D2D9DD;   // bordes / divisores
+$divider-light: #ACD7FF;  // líneas separadoras claras (ej. sidebar)
+$icon-box-bg: #E9EDFD;    // fondo de cajas de íconos en tarjetas
+
+// Colores de estado (badges) — únicos "acentos" fuera de la paleta azul
+$status-activa: #9EF18D;
+$status-programado: #F1B550;
+$status-finalizado: #E42716;
+$status-borrador: #D9D9D9;
+
+// Radios de esquina
+$card-radius: 7px;    // tarjetas grandes (stats, contenedores)
+$badge-radius: 4px;   // inputs / cajas pequeñas / badges
+$pill-radius: 6px;    // barra de filtros / píldoras de estado
