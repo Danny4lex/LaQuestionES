@@ -1,18 +1,11 @@
 import { fileURLToPath, URL } from "node:url";
-
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
-
 import terser from "@rollup/plugin-terser";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  input: "src/index.js",
-  output: {
-    dir: "output",
-    format: "cjs",
-  },
   plugins: [vue(), terser(), VitePWA({ registerType: "autoUpdate" })],
   resolve: {
     alias: {
@@ -21,8 +14,15 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: "127.0.0.1", // <-- Cambiado a 127.0.0.1 para evitar preflights CORS
-    open: "http://127.0.0.1:5173", // <-- Abre automáticamente esta IP en el navegador
+    host: "127.0.0.1",
+    proxy: {
+      // Redirige todo /api hacia Laravel de forma transparente sin CORS
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     watch: {
       usePolling: true,
     },
@@ -30,12 +30,5 @@ export default defineConfig({
   build: {
     outDir: "dist",
     chunkSizeWarningLimit: 500,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          lodash: ["lodash"],
-        },
-      },
-    },
   },
 });
