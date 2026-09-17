@@ -43,8 +43,8 @@
           @click="$emit('nuevo', node)" />
         <v-icon size="18" class="me-3" icon="mdi-pencil" title="Editar"
           @click="$emit('editar', node)" />
-        <v-icon size="18" icon="mdi-delete-outline" color="error" title="Eliminar"
-          @click="$emit('eliminar', node)" />
+        <!-- <v-icon size="18" icon="mdi-delete-outline" color="error" title="Eliminar"
+          @click="$emit('eliminar', node)" /> -->
       </div>
   
       <template v-if="abierto">

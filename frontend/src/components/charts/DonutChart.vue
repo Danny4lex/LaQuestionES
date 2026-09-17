@@ -50,7 +50,8 @@ function buildChart() {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { font: { size: 8 } }
+          labels: { font: { size: 12,family: 'Poppins' }  }
+          
         }
       }
     }
@@ -82,6 +83,7 @@ onUnmounted(() => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.04);
   border: none;
   height: 100%;
+  
 }
 .chart-card .card-header {
   background: transparent;
@@ -90,7 +92,8 @@ onUnmounted(() => {
   font-weight: 500;
   font-size: 0.75rem;
   color: #1e293b;
+  
 }
 .chart-card .card-body { padding: 6px 0 0 0; }
-.chart-container { height: 120px; position: relative; }
+.chart-container { height: 300px; position: relative; }
 </style>
