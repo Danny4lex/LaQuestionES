@@ -53,8 +53,8 @@ function buildChart() {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 8 } } },
-        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 8 } } }
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } }
       }
     }
   });
@@ -95,5 +95,5 @@ onUnmounted(() => {
   color: #1e293b;
 }
 .chart-card .card-body { padding: 6px 0 0 0; }
-.chart-container { height: 120px; position: relative; }
+.chart-container { height: 300px; position: relative; }
 </style>
