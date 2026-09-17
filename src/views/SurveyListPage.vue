@@ -529,11 +529,30 @@ const filteredSurveys = computed(() => {
 
 function estadoColor(slug) {
   switch (slug) {
-    case 'published': return 'success';
-    case 'scheduled': return 'warning';
-    case 'closed': return 'error';
-    case 'draft': return 'grey';
+    case 'published': return 'default';
+    case 'scheduled': return 'default';
+    case 'closed': return 'default';
+    case 'draft': return 'default';
+    case 'approved': return 'default';        
+    case 'review': return 'default';              
+    case 'rejected': return 'default';           
+    case 'needs_correction': return 'default'; 
+    case 'archived': return 'default';   
+    case 'paused': return 'dedault';
     default: return 'default';
+
+
+    // case 'published': return 'success';
+    // case 'scheduled': return 'warning';
+    // case 'closed': return 'error';
+    // case 'draft': return 'grey';
+    // case 'approved': return 'success';        
+    // case 'review': return 'info';              
+    // case 'rejected': return 'error';           
+    // case 'needs_correction': return 'warning'; 
+    // case 'archived': return 'grey-darken-1';   
+    // case 'paused': return 'orange';            
+    
   }
 }
 
@@ -1025,7 +1044,7 @@ onMounted(async () => {
 
 .estado-btn--draft {
   min-width: 70px !important;
-  background-color: #D9D9D9 !important;
+  
   color: #313845 !important;
 }
 

@@ -56,7 +56,7 @@
   
         <template #[`item.actions`]="{ item }">
           <v-icon size="20" class="me-2" icon="mdi-pencil" @click="abrirModalEditar(item)" />
-          <v-icon size="20" icon="mdi-delete-outline" color="error" @click="abrirModalEliminar(item)" />
+          <!-- <v-icon size="20" icon="mdi-delete-outline" color="error" @click="abrirModalEliminar(item)" /> -->
         </template>
       </v-data-table>
   
