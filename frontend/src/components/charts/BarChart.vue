@@ -55,11 +55,11 @@ function buildChart() {
         x: {
           beginAtZero: true,
           grid: { display: false },
-          ticks: { font: { size: 8 } }
+          ticks: { font: { size: 10 } }
         },
         y: {
           grid: { display: false },
-          ticks: { font: { size: 8 } }
+          ticks: { font: { size: 10, family: 'Poppins' } }
         }
       }
     }

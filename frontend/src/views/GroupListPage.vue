@@ -1,8 +1,8 @@
 <template>
   <div class="pa-4">
-    <v-row class="align-center mb-2">
-      <v-col cols="12" sm="auto">
-        <h1 class="text-h5 mb-0">Gestión de Participantes</h1>
+    <v-row class="align-center mt-8 mb-4">
+      <v-col cols="auto">
+        <h3 class="text-page-title">Gestión de Participantes</h3>
         <p class="text-body-small text-medium-emphasis mb-0">
           {{ hasPermission('surveys.viewAll') ? 'Todas las dependencias' : `Dependencia: ${miDependencia || 'Sin asignar'}` }}
         </p>
