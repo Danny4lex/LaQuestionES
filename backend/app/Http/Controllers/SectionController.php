@@ -8,6 +8,9 @@ use App\Services\ChangeLogService;
 use App\Services\SurveyStatusFlowService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
+
+
 
 class SectionController extends Controller
 {
@@ -34,6 +37,12 @@ class SectionController extends Controller
         return null;
     }
 
+    private function clearSurveyCache(int $surveyId): void
+{
+    Cache::forget("survey_detail_{$surveyId}_full");
+    Cache::forget("survey_detail_{$surveyId}_anon");
+}
+
     /**
      * Crea una nueva sección dentro de una encuesta.
      * Uso: organiza el contenido en bloques dentro del constructor.
@@ -59,6 +68,8 @@ class SectionController extends Controller
             "Se agregó la sección \"{$section->name}\".",
             $section->survey_id
         );
+
+        $this->clearSurveyCache($section->survey_id);
 
         return response()->json($section, 201);
     }
@@ -87,6 +98,8 @@ class SectionController extends Controller
             "Se editó la sección \"{$section->name}\".",
             $section->survey_id
         );
+
+        $this->clearSurveyCache($section->survey_id);
 
         return response()->json($section, 200);
     }
