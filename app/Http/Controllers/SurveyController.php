@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Illuminate\Support\Facades\Cache;
 
 class SurveyController extends Controller
 {
@@ -148,23 +149,45 @@ class SurveyController extends Controller
     // =====================================================================
     public function show(Request $request, Survey $survey): JsonResponse
     {
-        // 1. Verificar si el tipo de acceso o el parámetro indica un flujo anónimo
         $isAnonymous = $request->boolean('is_anonymous') || $survey->type?->slug === 'anonymous';
 
-        // 2. Carga ansiosa condicional: si es anónimo, excluimos 'personal_data'
-        $survey->load([
-            'sections' => function ($query) use ($isAnonymous) {
-                if ($isAnonymous) {
-                    $query->where('type', '!=', 'personal_data');
-                }
-            },
-            'sections.questions.options',
-            'department',
-            'category',
-            'status'
-        ]);
+        $anonKey = $isAnonymous ? 'anon' : 'full';
+        $cacheKey = "survey_detail_{$survey->id}_{$anonKey}";
+        $cacheTTL = 86400; // 24 horas
 
-        return response()->json($survey, 200);
+        $surveyData = Cache::remember($cacheKey, $cacheTTL, function () use ($survey, $isAnonymous) {
+            return Survey::where('id', $survey->id)
+                ->with([
+                    'sections' => function ($query) use ($isAnonymous) {
+                        $query->select('id', 'survey_id', 'name', 'description');
+                        if ($isAnonymous) {
+                            $query->where('type', '!=', 'personal_data');
+                        }
+                    },
+                    'sections.questions' => function ($query) {
+                        $query->select('id', 'section_id', 'statement', 'type', 'is_mandatory', 'sort_order', 'max_length')
+                            ->orderBy('sort_order', 'asc');
+                    },
+                    'sections.questions.options' => function ($query) {
+                        $query->select('id', 'question_id', 'option_text', 'sort_order')
+                            ->orderBy('sort_order', 'asc');
+                    },
+                    'sections.comments.user:id,name',
+                    'department',
+                    'category',
+                    'status',
+                    'type'
+                ])
+                ->first();
+        });
+
+        return response()->json($surveyData, 200);
+    }
+
+    private function clearSurveyCache(int $surveyId): void
+    {
+        Cache::forget("survey_detail_{$surveyId}_full");
+        Cache::forget("survey_detail_{$surveyId}_anon");
     }
 
     // =====================================================================
@@ -199,6 +222,8 @@ class SurveyController extends Controller
         if (!empty($validated)) {
             $this->logChange($request, $survey->id, 'Edición', $this->describirCambios($validated));
         }
+
+        $this->clearSurveyCache($survey->id);
 
         return response()->json($survey, 200);
     }
@@ -256,6 +281,7 @@ class SurveyController extends Controller
             'Cambio de estado',
             "El estado cambió de \"{$estadoAnterior}\" a \"{$estadoNuevo}\"."
         );
+        $this->clearSurveyCache($survey->id);
 
         return response()->json([
             'message'   => 'Estado de la encuesta actualizado correctamente.',
@@ -348,6 +374,7 @@ class SurveyController extends Controller
         // en la descripción para que el registro siga siendo legible
         // aunque, tras el borrado, "survey_id" quede en null (nullOnDelete).
         $this->logChange($request, $surveyId, 'Eliminación', "Se eliminó la encuesta \"{$titulo}\" (ID {$surveyId}).");
+        $this->clearSurveyCache($survey->id);
 
         $survey->delete();
 
