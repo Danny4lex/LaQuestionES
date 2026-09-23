@@ -9,6 +9,9 @@ use App\Services\SurveyStatusFlowService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+
+
 
 class QuestionController extends Controller
 {
@@ -31,6 +34,11 @@ class QuestionController extends Controller
         return Section::where('id', $sectionId)->value('survey_id');
     }
 
+    private function clearSurveyCache(int $surveyId): void
+{
+    Cache::forget("survey_detail_{$surveyId}_full");
+    Cache::forget("survey_detail_{$surveyId}_anon");
+}
     /**
      * FIX: mismo candado que en SectionController — las preguntas de
      * plantilla (template_id, sin section_id) quedan exentas porque una
@@ -93,6 +101,8 @@ class QuestionController extends Controller
             $this->surveyIdDeLaSeccion($validated['section_id'] ?? null)
         );
 
+        $this->clearSurveyCache($this->surveyIdDeLaSeccion($validated['section_id'] ?? null));
+
         return response()->json($question, 201);
     }
 
@@ -124,6 +134,8 @@ class QuestionController extends Controller
             $this->surveyIdDeLaSeccion($question->section_id)
         );
 
+        $this->clearSurveyCache($this->surveyIdDeLaSeccion($question->section_id));
+
         return response()->json($question, 200);
     }
 
@@ -140,16 +152,28 @@ class QuestionController extends Controller
     public function reorder(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'questions' => 'required|array',
-            'questions.*.id' => 'required|exists:questions,id',
+            'questions'              => 'required|array',
+            'questions.*.id'         => 'required|exists:questions,id',
             'questions.*.sort_order' => 'required|integer',
         ]);
+
+        // Obtener el survey_id a partir de la primera pregunta del lote
+        $firstQuestionId = $validated['questions'][0]['id'] ?? null;
+        $surveyId = null;
+
+        if ($firstQuestionId) {
+            $sectionId = Question::where('id', $firstQuestionId)->value('section_id');
+            $surveyId = $this->surveyIdDeLaSeccion($sectionId);
+        }
 
         DB::transaction(function () use ($validated) {
             foreach ($validated['questions'] as $item) {
                 Question::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
             }
         });
+
+        // Ahora $surveyId sí existe y limpia la caché correctamente
+        $this->clearSurveyCache($surveyId);
 
         return response()->json(['message' => 'Orden de las preguntas modificado con éxito.'], 200);
     }
@@ -177,6 +201,7 @@ class QuestionController extends Controller
             $surveyId
         );
 
+        $this->clearSurveyCache($surveyId);
         return response()->json(['message' => 'Pregunta eliminada de la estructura.'], 200);
     }
 }

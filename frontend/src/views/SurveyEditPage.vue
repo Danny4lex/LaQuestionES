@@ -1096,25 +1096,44 @@ function eliminarOpcion(sIndex, pIndex, oIndex) {
 }
 
 async function cargarCatalogos() {
-  const [tiposRes, catRes, estRes, depRes] = await Promise.all([
-    backendApi.get('/types'),
-    backendApi.get('/survey-categories'),
-    backendApi.get('/statuses'),
-    backendApi.get('/organizational-units'),
-  ]);
+  // 1. Si ya los tenemos guardados en la memoria del navegador, usarlos al instante (0 ms)
+  const cachedTipos = localStorage.getItem('cat_tipos');
+  const cachedCat = localStorage.getItem('cat_categorias');
+  const cachedEst = localStorage.getItem('cat_estados');
+  const cachedDep = localStorage.getItem('cat_dependencias');
 
-  tipos.value = tiposRes.data;
-  categorias.value = catRes.data;
-  estados.value = estRes.data;
-  dependencias.value = depRes.data;
+  if (cachedTipos && cachedCat && cachedEst && cachedDep) {
+    tipos.value = JSON.parse(cachedTipos);
+    categorias.value = JSON.parse(cachedCat);
+    estados.value = JSON.parse(cachedEst);
+    dependencias.value = JSON.parse(cachedDep);
+    return;
+  }
 
-  if (!esEdicion.value) {
-    const borrador = estados.value.find(e => e.slug === 'draft');
-    if (borrador) estadoId.value = borrador.id;
-
-    if (dependencias.value.length > 0) {
-      dependenciaId.value = dependencias.value[0].id;
+  // 2. Si es la primera vez que se entra, pedir de a uno para no ahogar a PHP
+  try {
+    if (!tipos.value.length) {
+      const res = await backendApi.get('/types');
+      tipos.value = res.data;
+      localStorage.setItem('cat_tipos', JSON.stringify(res.data));
     }
+    if (!categorias.value.length) {
+      const res = await backendApi.get('/survey-categories');
+      categorias.value = res.data;
+      localStorage.setItem('cat_categorias', JSON.stringify(res.data));
+    }
+    if (!estados.value.length) {
+      const res = await backendApi.get('/statuses');
+      estados.value = res.data;
+      localStorage.setItem('cat_estados', JSON.stringify(res.data));
+    }
+    if (!dependencias.value.length) {
+      const res = await backendApi.get('/organizational-units');
+      dependencias.value = res.data;
+      localStorage.setItem('cat_dependencias', JSON.stringify(res.data));
+    }
+  } catch (e) {
+    console.error('Error al cargar catálogos:', e);
   }
 }
 
@@ -1165,6 +1184,7 @@ async function cargarEncuesta(id) {
   const response = await backendApi.get(`/surveys/${id}`);
   const survey = response.data;
 
+  // Asignación inmediata de cabecera
   titulo.value = survey.title;
   descripcion.value = survey.description || '';
   tipoId.value = survey.type_id;
@@ -1174,6 +1194,7 @@ async function cargarEncuesta(id) {
   fechaInicio.value = survey.start_date ? survey.start_date.slice(0, 10) : null;
   fechaFin.value = survey.end_date ? survey.end_date.slice(0, 10) : null;
 
+  // Carga reactiva de la estructura
   cargarEstructura(survey);
 }
 
@@ -1355,16 +1376,22 @@ function cancelar() {
 
 onMounted(async () => {
   try {
-    await cargarCatalogos();
-
     if (esEdicion.value) {
-      await cargarEncuesta(route.params.id);
+      const surveyId = route.params.id;
+
+      // 1. Cargar la encuesta e inmediatamente quitar la pantalla de carga ("loading")
+      await cargarEncuesta(surveyId);
+      loading.value = false;
+
+      // 2. Cargar los catálogos en segundo plano sin bloquear la UI
+      cargarCatalogos();
     } else {
+      await cargarCatalogos();
       secciones.length = 0;
+      loading.value = false;
     }
   } catch (e) {
     errorMsg.value = e.response?.data?.message || 'No se pudo cargar la encuesta.';
-  } finally {
     loading.value = false;
   }
 });

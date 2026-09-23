@@ -135,20 +135,18 @@ class TemplateController extends Controller
                 ]);
 
                 if ($oldQuestion->options->isNotEmpty()) {
-                    $optionsToInsert = [];
-                    foreach ($oldQuestion->options as $oldOption) {
-                        $optionsToInsert[] = [
-                            'question_id' => $newQuestion->id,
-                            'option_text' => $oldOption->option_text,
-                            'sort_order'  => $oldOption->sort_order,
-                            'created_at'  => $now,
-                            'updated_at'  => $now,
-                        ];
-                    }
-                    
-                    // Inserción masiva en una sola consulta por pregunta
-                    DB::table('question_options')->insert($optionsToInsert);
-                }
+    $optionsToInsert = [];
+    foreach ($oldQuestion->options as $oldOption) {
+        $optionsToInsert[] = [
+            'question_id' => $newQuestion->id,
+            'option_text' => $oldOption->option_text,
+            'sort_order'  => $oldOption->sort_order,
+        ];
+    }
+    
+    // Inserción masiva en una sola consulta por pregunta
+    DB::table('question_options')->insert($optionsToInsert);
+}
             }
 
             return $newSurvey;
