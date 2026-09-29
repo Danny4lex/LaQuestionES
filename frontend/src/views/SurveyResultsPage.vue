@@ -43,10 +43,7 @@
     </v-row>
 
     <!-- Cargando -->
-    <div v-if="loading" class="text-center py-8">
-      <v-progress-circular indeterminate color="primary" />
-      <p class="mt-3 text-body-small">Cargando resultados...</p>
-    </div>
+    <LoadingState v-if="loading" message="Cargando resultados" />
 
     <!-- Error -->
     <div v-else-if="error" class="text-center py-8">
@@ -296,9 +293,7 @@
         <!-- paginada de 5 en 5 (ver ReportController::byParticipant).    -->
         <!-- ============================================================ -->
         <v-window-item value="por-encuestado">
-          <div v-if="cargandoPorEncuestado" class="text-center py-8">
-            <v-progress-circular indeterminate color="primary" />
-          </div>
+          <LoadingState v-if="cargandoPorEncuestado" message="Cargando resultados" />
 
           <div v-else-if="!encuestados.length" class="text-center text-medium-emphasis py-8">
             Todavía no hay respuestas registradas para esta encuesta.
@@ -446,6 +441,17 @@
           </template>
         </v-card-text>
         <v-card-actions class="pa-4">
+          <v-btn
+            v-if="reporteDependencia"
+            variant="outlined"
+            color="secondary"
+            class="text-button"
+            prepend-icon="mdi-file-pdf-box"
+            :loading="exportandoReporteDependencia"
+            @click="exportarReporteDependenciaPdf"
+          >
+            Descargar PDF
+          </v-btn>
           <v-spacer />
           <v-btn variant="outlined" color="secondary" class="text-button" @click="dialogDependencia = false">
             Cerrar
@@ -462,6 +468,7 @@ import { useRoute } from "vue-router";
 import backendApi from "@/services/backendApi";
 import DonutChart from "@/components/charts/DonutChart.vue";
 import BarChart from "@/components/charts/BarChart.vue";
+import LoadingState from "@/components/LoadingState.vue";
 import useAlert from "@/composables/useAlert";
 
 const { alert } = useAlert();
@@ -482,6 +489,7 @@ const tabActiva = ref('boletin');
 
 const exportandoExcel = ref(false);
 const exportandoPdf = ref(false);
+const exportandoReporteDependencia = ref(false);
 
 const satisfaction = ref([]);
 
@@ -583,54 +591,30 @@ function asegurarCargaPorEncuestado() {
 
 onMounted(async () => {
   try {
-    const surveyResponse = await backendApi.get(`/surveys/${surveyId}`);
+    // Dos llamadas en paralelo (antes eran 3 en serie + 1 por pregunta):
+    // la encuesta con sus preguntas y el consolidado de resultados.
+    const [surveyResponse, resultsResponse] = await Promise.all([
+      backendApi.get(`/surveys/${surveyId}`),
+      backendApi.get(`/reports/surveys/${surveyId}/results`),
+    ]);
+
     survey.value = surveyResponse.data;
-
-    const metricsResponse = await backendApi.get(`/reports/surveys/${surveyId}`);
-    metrics.value = metricsResponse.data;
-
+    metrics.value = resultsResponse.data.metrics;
     // Indicadores de satisfacción (promedio de preguntas tipo "escala").
-    // Si la encuesta no tiene preguntas de ese tipo, el arreglo llega
-    // vacío y la tarjeta simplemente no se muestra (ver v-if en el
-    // template).
-    try {
-      const satisfactionResponse = await backendApi.get(
-        `/reports/surveys/${surveyId}/satisfaction`
-      );
-      satisfaction.value = satisfactionResponse.data.indicators || [];
-    } catch (e) {
-      console.warn('No se pudieron cargar los indicadores de satisfacción', e);
-    }
+    satisfaction.value = resultsResponse.data.satisfaction || [];
 
+    const summaries = resultsResponse.data.summaries || {};
     const allQuestions = [];
     survey.value.sections.forEach((section) => {
       section.questions.forEach((question) => {
-        allQuestions.push(question);
+        allQuestions.push({
+          ...question,
+          summary: summaries[question.id] || { type: question.type, total_responses: 0 },
+        });
       });
     });
 
-    const summaryPromises = allQuestions.map(async (question) => {
-      try {
-        const summaryResponse = await backendApi.get(
-          `/surveys/${surveyId}/questions/${question.id}/summary`
-        );
-        return {
-          ...question,
-          summary: summaryResponse.data,
-        };
-      } catch (e) {
-        console.warn(`No se pudo cargar resumen de pregunta ${question.id}`, e);
-        return {
-          ...question,
-          summary: {
-            type: question.type,
-            total_responses: 0,
-          },
-        };
-      }
-    });
-
-    questionsWithSummary.value = await Promise.all(summaryPromises);
+    questionsWithSummary.value = allQuestions;
   } catch (e) {
     error.value =
       e.response?.data?.message ||
@@ -677,7 +661,7 @@ async function exportarPdf() {
     const response = await backendApi.get(`/reports/surveys/${surveyId}/export-pdf`, {
       responseType: 'blob',
     });
-    descargarBlob(response.data, `respuestas-encuesta-${surveyId}.pdf`);
+    descargarBlob(response.data, `resultados-encuesta-${surveyId}.pdf`);
   } catch (e) {
     alert.error('No se pudo exportar el archivo PDF.');
   } finally {
@@ -719,6 +703,22 @@ async function compararPeriodos() {
 // =====================================================================
 // REPORTE POR DEPENDENCIA — usa la dependencia dueña de esta encuesta.
 // =====================================================================
+async function exportarReporteDependenciaPdf() {
+  exportandoReporteDependencia.value = true;
+  try {
+    const dependencyId = survey.value?.dependency_id;
+    const response = await backendApi.get('/reports/departments/export-pdf', {
+      params: { dependency_id: dependencyId },
+      responseType: 'blob',
+    });
+    descargarBlob(response.data, `reporte-dependencia-${dependencyId}.pdf`);
+  } catch (e) {
+    alert.error('No se pudo exportar el reporte por dependencia.');
+  } finally {
+    exportandoReporteDependencia.value = false;
+  }
+}
+
 async function abrirReporteDependencia() {
   dialogDependencia.value = true;
 

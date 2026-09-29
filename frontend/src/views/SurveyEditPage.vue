@@ -52,16 +52,16 @@
           </v-btn>
         </v-col>
 
-        <v-col v-if="esEstadoDraft && hasPermission('status.submitForReview')" cols="12" sm="auto">
-          <v-btn
-            color="primary"
-            variant="flat"
-            prepend-icon="mdi-file-search-outline"
-            class="text-button"
-            @click="enviarRevision"
-          >
-            Enviar a revisión
-          </v-btn>
+        <v-col v-if="(esEstadoDraft || estadoActualSlug === 'needs_correction') && hasPermission('status.submitForReview')" cols="12" sm="auto">
+            <v-btn
+              color="primary"
+              variant="flat"
+              prepend-icon="mdi-file-search-outline"
+              class="text-button"
+              @click="enviarRevision"
+            >
+              {{ estadoActualSlug === 'needs_correction' ? 'Reenviar a revisión' : 'Enviar a revisión' }}
+            </v-btn>
         </v-col>
 
         <!-- Encuestador: solo puede publicar una vez que el Administrador
@@ -114,6 +114,33 @@
             </v-btn>
           </v-col>
         </template>
+
+<!-- Administrador: con correcciones solicitadas, la encuesta sigue
+     pudiendo aprobarse o publicarse sin esperar un nuevo ciclo. -->
+     <template v-if="estadoActualSlug === 'needs_correction' && hasPermission('status.moderate')">
+  <v-col cols="12" sm="auto">
+    <v-btn
+      color="success"
+      variant="flat"
+      prepend-icon="mdi-check-circle-outline"
+      class="text-button"
+      @click="cambiarEstadoPorSlug('approved', 'Encuesta aprobada.')"
+    >
+      Aprobar
+    </v-btn>
+  </v-col>
+  <v-col cols="12" sm="auto">
+    <v-btn
+      color="success"
+      variant="flat"
+      prepend-icon="mdi-rocket-launch-outline"
+      class="text-button"
+      @click="cambiarEstadoPorSlug('published', 'Encuesta publicada correctamente.')"
+    >
+      Publicar
+    </v-btn>
+  </v-col>
+</template>
 
         <!-- Administrador: puede seguir moviendo el ESTADO de la encuesta
              aunque ya no pueda tocar su contenido (Publicada/Cerrada
@@ -208,6 +235,26 @@
                 rows="2"
                 hide-details
                 class="input-field"
+              />
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-switch
+                v-model="esAnonima"
+                color="primary"
+                density="compact"
+                hide-details
+                label="Encuesta anónima (no pide datos del encuestado)"
+              />
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-switch
+                v-model="unicaRespuesta"
+                color="primary"
+                density="compact"
+                hide-details
+                label="Permitir una sola respuesta por persona"
               />
             </v-col>
 
@@ -889,6 +936,8 @@ const esEditable = computed(() => {
 const titulo = ref('');
 const descripcion = ref('');
 const tipoId = ref(null);
+const esAnonima = ref(false);
+const unicaRespuesta = ref(false);
 const categoriaId = ref(null);
 const estadoId = ref(null);
 const dependenciaId = ref(null);
@@ -1188,6 +1237,8 @@ async function cargarEncuesta(id) {
   titulo.value = survey.title;
   descripcion.value = survey.description || '';
   tipoId.value = survey.type_id;
+  esAnonima.value = !!survey.is_anonymous;
+  unicaRespuesta.value = !!survey.is_single_response;
   categoriaId.value = survey.survey_category_id;
   estadoId.value = survey.status_id;
   dependenciaId.value = survey.dependency_id;
@@ -1342,7 +1393,8 @@ async function guardarEncuesta() {
   const payload = {
     title: titulo.value,
     description: descripcion.value,
-    is_single_response: false,
+    is_single_response: unicaRespuesta.value,
+    is_anonymous: esAnonima.value,
     survey_category_id: categoriaId.value,
     type_id: tipoId.value,
     start_date: fechaInicio.value || null,

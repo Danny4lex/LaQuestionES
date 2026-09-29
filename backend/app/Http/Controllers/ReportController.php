@@ -6,6 +6,8 @@ use App\Models\Survey;
 use App\Models\Response as SurveyResponse;
 use App\Models\Participant;
 use App\Exports\SurveyResponsesExport;
+use App\Models\OrganizationalUnit;
+use App\Services\SurveyReportService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -20,14 +22,24 @@ use Barryvdh\DomPDF\Facade\Pdf;
 // =========================================================================
 class ReportController extends Controller
 {
+    public function __construct(private readonly SurveyReportService $reportService) {}
+
+    // Un usuario sin "surveys.viewAll" solo puede consultar reportes de su
+    // propia dependencia (misma regla multi-dependencia del listado).
+    private function dependenciaPermitida(Request $request, int $dependencyId): bool
+    {
+        $puedeVerTodas = $request->user()?->role?->hasPermission('surveys.viewAll') ?? false;
+
+        return $puedeVerTodas || (int) $request->user()?->dependency_id === $dependencyId;
+    }
+
     // =====================================================================
     // REPORTE POR ENCUESTA — total de respuestas, tasa de finalización,
     // y desglose de participación por tipo de participante.
     // =====================================================================
     public function bySurvey(Survey $survey): JsonResponse
     {
-        $totalParticipants = $survey->responses()->distinct('participant_id')->count('participant_id')
-            + $survey->responses()->whereNull('participant_id')->distinct('anonymous_identifier')->count('anonymous_identifier');
+        $totalParticipants = $this->reportService->countRespondents($survey->id);
 
         $totalResponses = $survey->responses()->count();
         $completedResponses = $survey->responses()->where('is_completed', true)->count();
@@ -45,6 +57,16 @@ class ReportController extends Controller
     }
 
     // =====================================================================
+    // RESULTADOS COMPLETOS — métricas, satisfacción y resumen de todas las
+    // preguntas en una sola llamada (antes la pantalla hacía 3 llamadas más
+    // una por cada pregunta). Alimenta SurveyResultsPage.vue.
+    // =====================================================================
+    public function results(Survey $survey): JsonResponse
+    {
+        return response()->json($this->reportService->buildLiveResults($survey), 200);
+    }
+
+    // =====================================================================
     // REPORTE POR DEPENDENCIA — resumen de todas las encuestas de una
     // dependencia, con su cantidad de respuestas cada una.
     // =====================================================================
@@ -53,6 +75,10 @@ class ReportController extends Controller
         $validated = $request->validate([
             'dependency_id' => 'required|exists:organizational_units,id',
         ]);
+
+        if (!$this->dependenciaPermitida($request, (int) $validated['dependency_id'])) {
+            return response()->json(['message' => 'No tienes acceso a los reportes de esta dependencia.'], 403);
+        }
 
         $surveys = Survey::where('dependency_id', $validated['dependency_id'])
             ->with(['status', 'category'])
@@ -144,17 +170,44 @@ class ReportController extends Controller
     // =====================================================================
     public function exportPdf(Survey $survey)
     {
-        $responses = $survey->responses()
-            ->with(['question', 'selectedOptions', 'participant'])
-            ->orderBy('submitted_at')
-            ->get();
-
-        $filename = 'respuestas-encuesta-' . $survey->id . '-' . now()->format('Y-m-d') . '.pdf';
+        $filename = 'resultados-encuesta-' . $survey->id . '-' . now()->format('Y-m-d') . '.pdf';
 
         return Pdf::loadView('reports.survey-responses-pdf', [
-            'survey' => $survey,
-            'responses' => $responses,
-        ])->download($filename);
+            'survey'  => $survey->loadMissing(['department', 'category', 'type', 'status']),
+            'results' => $this->reportService->buildResults($survey),
+            'detail'  => $this->reportService->buildDetail($survey),
+            'logo'    => $this->reportService->logoDataUri(),
+        ])->setPaper('a4')->download($filename);
+    }
+
+    // =====================================================================
+    // EXPORTAR REPORTE POR DEPENDENCIA A PDF — mismo diseño institucional.
+    // =====================================================================
+    public function exportDepartmentPdf(Request $request)
+    {
+        $validated = $request->validate([
+            'dependency_id' => 'required|exists:organizational_units,id',
+        ]);
+
+        if (!$this->dependenciaPermitida($request, (int) $validated['dependency_id'])) {
+            return response()->json(['message' => 'No tienes acceso a los reportes de esta dependencia.'], 403);
+        }
+
+        $department = OrganizationalUnit::findOrFail($validated['dependency_id']);
+
+        $surveys = Survey::where('dependency_id', $department->id)
+            ->with(['status', 'category'])
+            ->withCount('responses')
+            ->orderBy('title')
+            ->get();
+
+        $filename = 'reporte-dependencia-' . $department->id . '-' . now()->format('Y-m-d') . '.pdf';
+
+        return Pdf::loadView('reports.department-report-pdf', [
+            'department' => $department,
+            'surveys'    => $surveys,
+            'logo'       => $this->reportService->logoDataUri(),
+        ])->setPaper('a4')->download($filename);
     }
 
     // =====================================================================
@@ -173,34 +226,46 @@ class ReportController extends Controller
         $perPage = 5;
         $page = max((int) $request->get('page', 1), 1);
 
-        $encuestados = SurveyResponse::where('survey_id', $survey->id)
+        // Un encuestado = participant_id (identificado/invitado) o, si es
+        // anónimo, su anonymous_identifier. La paginación se hace en la base
+        // de datos (antes se traían todos los encuestados a memoria).
+        $agrupado = SurveyResponse::where('survey_id', $survey->id)
             ->select(
                 DB::raw('COALESCE(participant_id, anonymous_identifier) as encuestado_key'),
                 DB::raw('MAX(submitted_at) as ultima_respuesta')
             )
-            ->groupBy('encuestado_key')
+            ->groupBy('encuestado_key');
+
+        $total = DB::query()->fromSub(clone $agrupado, 'e')->count();
+
+        $paginaActual = (clone $agrupado)
             ->orderByDesc('ultima_respuesta')
+            ->forPage($page, $perPage)
             ->get();
 
-        $total = $encuestados->count();
-        $paginaActual = $encuestados->forPage($page, $perPage);
+        $participantIds = $paginaActual->pluck('encuestado_key')->filter(fn($k) => is_numeric($k))->values();
+        $anonIds = $paginaActual->pluck('encuestado_key')->reject(fn($k) => is_numeric($k))->values();
 
-        $data = $paginaActual->map(function ($item) use ($survey) {
+        $participants = Participant::whereIn('id', $participantIds)->get()->keyBy('id');
+
+        // Todas las respuestas de la página en UNA consulta.
+        $respuestas = SurveyResponse::with(['question', 'selectedOptions'])
+            ->where('survey_id', $survey->id)
+            ->where(function ($q) use ($participantIds, $anonIds) {
+                $q->whereIn('participant_id', $participantIds)
+                    ->orWhereIn('anonymous_identifier', $anonIds);
+            })
+            ->get();
+
+        $data = $paginaActual->map(function ($item) use ($participants, $respuestas) {
             $key = $item->encuestado_key;
-            // Un participant_id real es numérico; un anonymous_identifier
-            // es un UUID (contiene guiones), nunca se confunden entre sí.
-            $participant = is_numeric($key) ? Participant::find($key) : null;
+            $participant = is_numeric($key) ? $participants->get((int) $key) : null;
 
-            $respuestasQuery = SurveyResponse::with(['question', 'selectedOptions'])
-                ->where('survey_id', $survey->id);
+            $propias = is_numeric($key)
+                ? $respuestas->where('participant_id', (int) $key)
+                : $respuestas->where('anonymous_identifier', $key)->whereNull('participant_id');
 
-            if ($participant) {
-                $respuestasQuery->where('participant_id', $participant->id);
-            } else {
-                $respuestasQuery->where('anonymous_identifier', $key);
-            }
-
-            $respuestas = $respuestasQuery->get()->sortBy(fn($r) => $r->question?->sort_order ?? 0);
+            $propias = $propias->sortBy(fn($r) => $r->question?->sort_order ?? 0);
 
             return [
                 'encuestado_key' => (string) $key,
@@ -212,7 +277,7 @@ class ReportController extends Controller
                 ] : null,
                 'is_anonymous' => !$participant,
                 'submitted_at' => $item->ultima_respuesta,
-                'answers' => $respuestas->values()->map(fn($r) => [
+                'answers' => $propias->values()->map(fn($r) => [
                     'question_id' => $r->question_id,
                     'statement' => $r->question?->statement,
                     'type' => $r->question?->type,
