@@ -12,23 +12,52 @@ use Illuminate\Http\Request;
 // decidir si una respuesta queda ligada a un participant_id real o si debe
 // quedar anónima (participant_id = NULL + anonymous_identifier generado),
 // y controlar duplicados según is_single_response.
+//
+// Una encuesta es anónima cuando surveys.is_anonymous = true. En ese caso
+// NUNCA se guardan nombre, correo ni teléfono, aunque el cliente los envíe.
 // =========================================================================
 class AnonymizeResponseService
 {
     // =====================================================================
     // Resuelve (o crea) el Participant correspondiente a una respuesta
-    // pública, según el tipo de encuesta y si la persona se identificó
-    // voluntariamente (nombre/email) o no.
+    // pública.
+    //
+    // - Encuesta anónima: participante "anonimo" sin ningún dato personal.
+    // - Encuesta identificada: se reutiliza el participante de esa misma
+    //   encuesta con el mismo correo (así "una respuesta por persona"
+    //   realmente funciona) y se actualizan sus datos.
     // =====================================================================
     public function resolvePublicParticipant(Survey $survey, Request $request): Participant
     {
-        $identifiesVoluntarily = $request->filled('name') || $request->filled('email');
+        if ($survey->is_anonymous) {
+            return Participant::create([
+                'type' => 'anonimo',
+                'invitation_status' => null,
+                'registered_at' => now(),
+                'survey_id' => $survey->id,
+            ]);
+        }
 
-        return Participant::create([
-            'type' => $identifiesVoluntarily ? 'identificado' : 'anonimo',
+        $email = mb_strtolower(trim((string) $request->input('email')));
+
+        $participant = Participant::where('survey_id', $survey->id)
+            ->where('type', 'identificado')
+            ->where('email', $email)
+            ->first();
+
+        $data = [
             'name' => $request->input('name'),
-            'email' => $request->input('email'),
+            'email' => $email,
             'phone' => $request->input('phone'),
+        ];
+
+        if ($participant) {
+            $participant->update($data);
+            return $participant;
+        }
+
+        return Participant::create($data + [
+            'type' => 'identificado',
             'invitation_status' => null, // No aplica: no hubo invitación previa.
             'registered_at' => now(),
             'survey_id' => $survey->id,
@@ -41,16 +70,14 @@ class AnonymizeResponseService
     //
     // - Participantes IDENTIFICADOS o INVITADOS: verificación exacta por
     //   participant_id (100% confiable).
-    // - Participantes ANÓNIMOS: verificación por IP de origen (source_ip),
-    //   tal como está previsto en el diccionario de datos ("Trazabilidad
-    //   sin romper anonimato"). Es una heurística práctica, no perfecta:
-    //   varias personas detrás de la misma IP (red de oficina, WiFi
-    //   público) podrían compartir el bloqueo; alguien con IP dinámica
-    //   podría evitarlo. Se documenta la limitación, no se oculta.
+    // - Respuestas ANÓNIMAS: verificación por IP de origen (source_ip).
+    //   Es una heurística práctica, no perfecta: varias personas detrás de
+    //   la misma IP podrían compartir el bloqueo, y una IP dinámica podría
+    //   evitarlo. Se documenta la limitación, no se oculta.
     // =====================================================================
     public function alreadyResponded(Survey $survey, Participant $participant, Request $request): bool
     {
-        if ($participant->type === 'anonimo') {
+        if ($survey->is_anonymous || $participant->type === 'anonimo') {
             return SurveyResponse::where('survey_id', $survey->id)
                 ->whereNull('participant_id')
                 ->where('source_ip', $request->ip())

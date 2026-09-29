@@ -30,7 +30,7 @@ class SurveyPublicController extends Controller
         }
 
         return response()->json(
-            $survey->only(['id', 'title', 'description', 'is_single_response'])
+            $survey->only(['id', 'title', 'description', 'is_single_response', 'is_anonymous'])
                 + ['sections' => $survey->load('sections.questions.options')->sections],
             200
         );
@@ -54,8 +54,8 @@ class SurveyPublicController extends Controller
         }
 
         return response()->json([
-            'participant' => $participant->only(['id', 'name', 'email', 'invitation_status']),
-            'survey' => $participant->survey->only(['id', 'title', 'description', 'is_single_response']),
+            'participant' => $participant->only(['id', 'name', 'email', 'phone', 'invitation_status']),
+            'survey' => $participant->survey->only(['id', 'title', 'description', 'is_single_response', 'is_anonymous']),
             'sections' => $participant->survey->load('sections.questions.options')->sections,
         ], 200);
     }
@@ -67,9 +67,14 @@ class SurveyPublicController extends Controller
             return $error;
         }
 
+        // Encuesta identificada: nombre y correo son obligatorios (los datos
+        // del encuestado que pide la primera sección). Encuesta anónima: no
+        // se piden ni se guardan.
+        $datosRequeridos = $survey->is_anonymous ? 'nullable' : 'required';
+
         $validated = $request->validate([
-            'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email',
+            'name' => $datosRequeridos . '|string|max:255',
+            'email' => $datosRequeridos . '|email|max:255',
             'phone' => 'nullable|string|max:50',
             'answers' => 'required|array|min:1',
             'answers.*.question_id' => 'required|exists:questions,id',
@@ -102,12 +107,24 @@ class SurveyPublicController extends Controller
         }
 
         $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:50',
             'answers' => 'required|array|min:1',
             'answers.*.question_id' => 'required|exists:questions,id',
             'answers.*.value' => 'nullable',
             'answers.*.option_ids' => 'nullable|array',
             'answers.*.option_ids.*' => 'exists:question_options,id',
         ]);
+
+        // Encuesta identificada: el invitado completa su nombre y teléfono
+        // (el correo ya es el de la invitación y no se modifica). En una
+        // encuesta anónima no se guarda ningún dato personal.
+        if (!$survey->is_anonymous) {
+            $participant->update([
+                'name' => $validated['name'] ?? $participant->name,
+                'phone' => $validated['phone'] ?? $participant->phone,
+            ]);
+        }
 
         return $this->storeAnswers($request, $survey, $participant, $validated['answers']);
     }
@@ -161,7 +178,13 @@ class SurveyPublicController extends Controller
             ], 422);
         }
 
-        DB::transaction(function () use ($request, $survey, $participant, $answers, $allQuestions) {
+        // Anónima: respuestas sin participant_id. Un MISMO identificador
+        // por envío para poder agruparlas después como "un encuestado"
+        // (antes cada fila generaba su propio UUID y se separaban).
+        $esAnonima = $survey->is_anonymous || $participant->type === 'anonimo';
+        $anonymousId = $esAnonima ? (string) \Illuminate\Support\Str::uuid() : null;
+
+        DB::transaction(function () use ($request, $survey, $participant, $answers, $allQuestions, $esAnonima, $anonymousId) {
             foreach ($answers as $answer) {
                 $question = $allQuestions->firstWhere('id', $answer['question_id']);
 
@@ -185,7 +208,8 @@ class SurveyPublicController extends Controller
 
                     'question_id' => $question->id,
                     'survey_id' => $survey->id,
-                    'participant_id' => $participant->type === 'anonimo' ? null : $participant->id,
+                    'anonymous_identifier' => $anonymousId,
+                    'participant_id' => $esAnonima ? null : $participant->id,
                 ]);
 
                 if (in_array($question->type, ['opcion_unica', 'opcion_multiple']) && !empty($answer['option_ids'])) {

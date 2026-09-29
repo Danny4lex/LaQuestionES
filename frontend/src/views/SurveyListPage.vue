@@ -173,7 +173,8 @@
 
     <!-- Tabla -->
     <v-card class="mb-4" variant="flat">
-      <v-table>
+      <LoadingState v-if="cargandoEncuestas" message="Cargando encuestas" />
+      <v-table v-else>
         <thead>
           <tr>
             <th class="text-label">Nombre</th>
@@ -355,10 +356,28 @@
             </div>
 
             <div v-else-if="qrImageUrl" class="d-flex flex-column align-center">
-              <img :src="qrImageUrl" alt="Código QR de la encuesta" width="180" height="180" />
-              <div class="d-flex gap-2 mt-2">
-                <v-btn size="small" variant="outlined" class="text-button" :href="qrImageUrl" download="qr-encuesta.svg">
-                  Descargar
+              <v-alert
+                v-if="qrAdvertencia"
+                type="warning"
+                variant="tonal"
+                density="compact"
+                class="mb-3 text-body-small"
+              >
+                {{ qrAdvertencia }}
+              </v-alert>
+              <img :src="qrImageUrl" alt="Código QR de la encuesta" width="200" height="200" />
+              <p class="text-body-small text-medium-emphasis mt-2 mb-0 text-center" style="word-break: break-all;">
+                Al escanearlo abre: {{ qrPublicUrl }}
+              </p>
+              <div class="d-flex flex-wrap justify-center gap-2 mt-2">
+                <v-btn size="small" variant="outlined" class="text-button" @click="descargarQrPng(qrImageUrl, `qr-encuesta-${encuestaDistribucion.id}.png`)">
+                  Descargar PNG
+                </v-btn>
+                <v-btn size="small" variant="outlined" class="text-button" :href="qrImageUrl" :download="`qr-encuesta-${encuestaDistribucion.id}.svg`">
+                  Descargar SVG
+                </v-btn>
+                <v-btn size="small" variant="outlined" class="text-button" @click="copiarAlPortapapeles(qrPublicUrl || enlacePublico)">
+                  Copiar enlace
                 </v-btn>
                 <v-btn size="small" variant="outlined" color="secondary" class="text-button" :loading="regenerandoQr" @click="regenerarQr">
                   Regenerar
@@ -432,6 +451,14 @@
                     <v-btn size="x-small" variant="text" icon @click="copiarAlPortapapeles(enlaceParticipante(p))" title="Copiar enlace">
                       <v-icon size="16">mdi-content-copy</v-icon>
                     </v-btn>
+                    <v-btn
+                      v-if="p.invitation_status !== 'respondido'"
+                      size="x-small" variant="text" icon
+                      title="Ver código QR"
+                      @click="abrirQrParticipante(p)"
+                    >
+                      <v-icon size="16">mdi-qrcode</v-icon>
+                    </v-btn>
                   </td>
                 </tr>
               </tbody>
@@ -441,6 +468,40 @@
         <v-card-actions class="pa-4">
           <v-spacer />
           <v-btn variant="outlined" color="secondary" class="text-button" @click="cerrarDistribucion">
+            Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Diálogo QR individual de un invitado (encuesta privada) -->
+    <v-dialog v-model="dialogQrParticipante" max-width="360">
+      <v-card>
+        <v-card-title class="text-h6">
+          Código QR del invitado
+          <div class="text-body-small text-medium-emphasis font-weight-regular">
+            {{ participanteQr?.email }}
+          </div>
+        </v-card-title>
+        <v-card-text class="d-flex flex-column align-center">
+          <v-progress-circular v-if="cargandoQrParticipante" indeterminate color="primary" size="24" />
+          <template v-else-if="qrParticipanteUrl">
+            <img :src="qrParticipanteUrl" alt="Código QR del invitado" width="220" height="220" />
+            <p class="text-body-small text-medium-emphasis mt-2 mb-0 text-center">
+              Este QR abre el enlace individual de esta persona. No lo compartas con nadie más.
+            </p>
+          </template>
+        </v-card-text>
+        <v-card-actions class="pa-4">
+          <v-btn
+            v-if="qrParticipanteUrl"
+            variant="outlined" class="text-button"
+            @click="descargarQrPng(qrParticipanteUrl, `qr-invitado-${participanteQr.id}.png`)"
+          >
+            Descargar PNG
+          </v-btn>
+          <v-spacer />
+          <v-btn variant="outlined" color="secondary" class="text-button" @click="cerrarQrParticipante">
             Cerrar
           </v-btn>
         </v-card-actions>
@@ -467,12 +528,14 @@ import { useRouter } from 'vue-router';
 import backendApi from '@/services/backendApi';
 import useAuth from '@/composables/useAuth';
 import useAlert from '@/composables/useAlert';
+import LoadingState from '@/components/LoadingState.vue';
 
 const router = useRouter();
 const { hasPermission } = useAuth();
 const { alert } = useAlert();
 
 const surveys = ref([]);
+const cargandoEncuestas = ref(true);
 const filtroBusqueda = ref('');
 const filtroEstado = ref('all');
 const filtroTipo = ref('all');
@@ -586,6 +649,7 @@ function verResultados(id) {
 }
 
 async function cargarEncuestas() {
+  cargandoEncuestas.value = true;
   try {
     const response = await backendApi.get('/surveys', {
       params: filtroDependencia.value ? { dependency_id: filtroDependencia.value } : {},
@@ -593,6 +657,8 @@ async function cargarEncuestas() {
     surveys.value = response.data;
   } catch (error) {
     console.error('Error cargando encuestas:', error);
+  } finally {
+    cargandoEncuestas.value = false;
   }
 }
 
@@ -737,6 +803,34 @@ const cargandoQr = ref(false);
 const generandoQr = ref(false);
 const regenerandoQr = ref(false);
 const qrImageUrl = ref(null);
+const qrPublicUrl = ref('');
+
+// Si el QR apunta a una dirección distinta a la que usa el administrador
+// (típico: FRONTEND_URL con "localhost" en el backend), el celular de quien
+// lo escanee no podrá abrirlo. Se avisa para corregirlo antes de compartirlo.
+const qrAdvertencia = computed(() => {
+  if (!qrPublicUrl.value) return '';
+  try {
+    const destino = new URL(qrPublicUrl.value);
+    const actual = window.location;
+    const esLocal = ['localhost', '127.0.0.1'].includes(destino.hostname);
+    const adminEsLocal = ['localhost', '127.0.0.1'].includes(actual.hostname);
+    if (esLocal && !adminEsLocal) {
+      return 'Este QR apunta a "' + destino.host + '", que solo funciona en tu propio equipo. Configura FRONTEND_URL en el .env del backend con la dirección real del sistema.';
+    }
+    if (destino.origin !== actual.origin && !adminEsLocal) {
+      return 'Este QR apunta a "' + destino.origin + '", distinto a la dirección desde la que estás trabajando (' + actual.origin + '). Verifica FRONTEND_URL en el backend.';
+    }
+  } catch (e) {
+    return '';
+  }
+  return '';
+});
+
+const dialogQrParticipante = ref(false);
+const participanteQr = ref(null);
+const qrParticipanteUrl = ref(null);
+const cargandoQrParticipante = ref(false);
 
 const enlacePublico = computed(() => {
   if (!encuestaDistribucion.value) return '';
@@ -785,6 +879,7 @@ function liberarQrPrevio() {
     URL.revokeObjectURL(qrImageUrl.value);
     qrImageUrl.value = null;
   }
+  qrPublicUrl.value = '';
 }
 
 async function cargarQr(surveyId) {
@@ -795,6 +890,10 @@ async function cargarQr(surveyId) {
       responseType: 'blob',
     });
     qrImageUrl.value = URL.createObjectURL(response.data);
+
+    // URL real que codifica el QR (la arma el backend con FRONTEND_URL).
+    const info = await backendApi.get(`/surveys/${surveyId}/qr-code`);
+    qrPublicUrl.value = info.data.public_url;
   } catch (e) {
     // 404 = todavía no existe el QR; se muestra el botón "Generar".
     if (e.response?.status !== 404) {
@@ -881,14 +980,89 @@ function colorInvitacion(status) {
   }
 }
 
-function copiarAlPortapapeles(texto) {
-  navigator.clipboard.writeText(texto);
-  alert.success('Enlace copiado al portapapeles.');
+async function copiarAlPortapapeles(texto) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(texto);
+    } else {
+      // Respaldo para conexiones http (sin contexto seguro).
+      const area = document.createElement('textarea');
+      area.value = texto;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+    }
+    alert.success('Enlace copiado al portapapeles.');
+  } catch (e) {
+    alert.error('No se pudo copiar el enlace.');
+  }
+}
+
+// Convierte el SVG del QR a PNG (1024 px, fondo blanco) y lo descarga.
+function descargarQrPng(svgUrl, nombreArchivo) {
+  const img = new Image();
+  img.onload = () => {
+    const tamano = 1024;
+    const canvas = document.createElement('canvas');
+    canvas.width = tamano;
+    canvas.height = tamano;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, tamano, tamano);
+    ctx.drawImage(img, 0, 0, tamano, tamano);
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        alert.error('No se pudo generar la imagen PNG.');
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = nombreArchivo;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  };
+  img.onerror = () => alert.error('No se pudo generar la imagen PNG.');
+  img.src = svgUrl;
+}
+
+// QR individual de un invitado (encuesta privada).
+async function abrirQrParticipante(participante) {
+  participanteQr.value = participante;
+  dialogQrParticipante.value = true;
+  cargandoQrParticipante.value = true;
+  cerrarQrParticipante(false);
+  try {
+    const response = await backendApi.get(`/participants/${participante.id}/qr-code/image`, {
+      responseType: 'blob',
+    });
+    qrParticipanteUrl.value = URL.createObjectURL(response.data);
+  } catch (e) {
+    alert.error('No se pudo cargar el código QR del invitado.');
+  } finally {
+    cargandoQrParticipante.value = false;
+  }
+}
+
+function cerrarQrParticipante(cerrar = true) {
+  if (qrParticipanteUrl.value) {
+    URL.revokeObjectURL(qrParticipanteUrl.value);
+    qrParticipanteUrl.value = null;
+  }
+  if (cerrar === true) {
+    dialogQrParticipante.value = false;
+  }
 }
 
 onMounted(async () => {
-  await cargarDependencias();
-  await cargarEncuestas();
+  // En paralelo: la lista no necesita esperar a las dependencias.
+  await Promise.all([cargarDependencias(), cargarEncuestas()]);
 });
 </script>
 
