@@ -174,7 +174,9 @@ Route::middleware(['auth:api', 'auth.external'])->group(function () {
 
     Route::post('/surveys/{survey}/qr-code', [QrCodeController::class, 'generate']);
     Route::put('/surveys/{survey}/qr-code', [QrCodeController::class, 'regenerate']);
-    Route::get('/surveys/{survey}/qr-code/image', [QrCodeController::class, 'image']); // <img src="...">
+    Route::get('/surveys/{survey}/qr-code', [QrCodeController::class, 'show']);
+    Route::get('/surveys/{survey}/qr-code/image', [QrCodeController::class, 'image']); // SVG (encuesta publica)
+    Route::get('/participants/{participant}/qr-code/image', [QrCodeController::class, 'participantImage']); // SVG (invitado, encuesta privada)
 
     // -------------------------------------------------------------------
     // 2.11 Respuestas recolectadas (vista administrativa)
@@ -188,7 +190,9 @@ Route::middleware(['auth:api', 'auth.external'])->group(function () {
     // -------------------------------------------------------------------
     Route::get('/reports/surveys/{survey}', [ReportController::class, 'bySurvey']);
     Route::get('/reports/departments', [ReportController::class, 'byDepartment']);
+    Route::get('/reports/departments/export-pdf', [ReportController::class, 'exportDepartmentPdf']); // descarga .pdf
     Route::get('/reports/surveys/{survey}/satisfaction', [ReportController::class, 'satisfactionIndicators']);
+    Route::get('/reports/surveys/{survey}/results', [ReportController::class, 'results']); // metricas + satisfaccion + resumen de todas las preguntas
 
     // Pestaña "Por encuestado" de SurveyResultsPage.vue — paginado, 5 por
     // página (?page=n).

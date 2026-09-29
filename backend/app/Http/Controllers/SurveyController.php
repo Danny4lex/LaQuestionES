@@ -37,6 +37,7 @@ class SurveyController extends Controller
         'title'              => 'el título',
         'description'        => 'la descripción',
         'is_single_response' => 'la restricción de respuesta única',
+        'is_anonymous'       => 'el modo anónimo',
         'survey_category_id' => 'la categoría',
         'type_id'            => 'el tipo de acceso',
         'start_date'         => 'la fecha de inicio',
@@ -67,7 +68,13 @@ class SurveyController extends Controller
     // =====================================================================
     public function index(Request $request): JsonResponse
     {
-        $query = Survey::with(['category', 'type', 'status', 'department', 'owner'])
+        $query = Survey::with([
+                'category:id,name',
+                'type:id,name',
+                'status:id,name,slug',
+                'department:id,name',
+                'owner:id,name',
+            ])
             ->withCount('responses');
 
         $puedeVerTodas = $request->user()?->role?->hasPermission('surveys.viewAll') ?? false;
@@ -99,6 +106,7 @@ class SurveyController extends Controller
             'title'              => 'required|string|max:255',
             'description'        => 'nullable|string',
             'is_single_response' => 'required|boolean',
+            'is_anonymous'       => 'sometimes|boolean',
             'survey_category_id' => 'required|exists:survey_categories,id',
             'type_id'            => 'required|exists:types,id',
             'status_id'          => 'required|exists:statuses,id',
@@ -149,7 +157,7 @@ class SurveyController extends Controller
     // =====================================================================
     public function show(Request $request, Survey $survey): JsonResponse
     {
-        $isAnonymous = $request->boolean('is_anonymous') || $survey->type?->slug === 'anonymous';
+        $isAnonymous = $request->boolean('is_anonymous') || (bool) $survey->is_anonymous;
 
         $anonKey = $isAnonymous ? 'anon' : 'full';
         $cacheKey = "survey_detail_{$survey->id}_{$anonKey}";
@@ -211,6 +219,7 @@ class SurveyController extends Controller
             'title'              => 'sometimes|required|string|max:255',
             'description'        => 'nullable|string',
             'is_single_response' => 'sometimes|required|boolean',
+            'is_anonymous'       => 'sometimes|boolean',
             'survey_category_id' => 'sometimes|required|exists:survey_categories,id',
             'type_id'            => 'sometimes|required|exists:types,id',
             'start_date'         => 'nullable|date',
@@ -235,7 +244,7 @@ class SurveyController extends Controller
     // transición ("status.moderate" cubre todo lo demás).
     private function habilidadRequerida(?string $fromSlug, string $toSlug): string
     {
-        if ($toSlug === 'review' && $fromSlug === 'draft') {
+        if ($toSlug === 'review' && in_array($fromSlug, ['draft', 'needs_correction'], true)) {
             return 'status.submitForReview';
         }
 

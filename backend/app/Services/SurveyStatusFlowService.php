@@ -27,7 +27,7 @@ class SurveyStatusFlowService
         'rejected' => ['draft', 'deleted'],
         // NUEVO: el Encuestador puede volver a Borrador para editar, o
         // reenviar directo a revisión si los cambios ya fueron mínimos.
-        'needs_correction' => ['draft', 'review', 'deleted'],
+        'needs_correction' => ['draft', 'review', 'approved', 'published', 'deleted'],
         'approved' => ['scheduled', 'published'],
         'scheduled' => ['published', 'draft'],
         'published' => ['paused', 'closed'],

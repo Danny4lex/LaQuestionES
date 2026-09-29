@@ -30,5 +30,17 @@ export default defineConfig({
   build: {
     outDir: "dist",
     chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        // Librerías pesadas en archivos aparte: el navegador las guarda en
+        // caché y no las vuelve a descargar cuando cambia el código del sistema.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("chart.js")) return "vendor-charts";
+          if (id.includes("vuetify")) return "vendor-vuetify";
+          if (id.includes("/vue/") || id.includes("vue-router") || id.includes("pinia") || id.includes("vue-i18n")) return "vendor-vue";
+        },
+      },
+    },
   },
 });
