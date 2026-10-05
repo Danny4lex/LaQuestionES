@@ -50,7 +50,7 @@ function buildChart() {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { font: { size: 12,family: 'Poppins' }  }
+          labels: { font: { size: 12,family: 'Poppins',  }  }
           
         }
       }
