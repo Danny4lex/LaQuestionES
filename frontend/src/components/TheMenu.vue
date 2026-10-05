@@ -8,21 +8,18 @@
     rail-width="80"
     class="app-sidebar"
   >
-    <!-- Logo -->
+<!-- Logo -->
     <template #prepend>
-      <div
-        v-if="stateSideBar === 'active'"
-        class="d-flex align-center px-4"
-        style="height: 90px; border-bottom: 1px solid #ACD7FF;"
-      >
+      <div class="sidebar-logo">
         <v-img
           :src="logoUrl"
           alt="Logo"
-          max-width="40"
-          max-height="40"
+          width="40"
+          height="40"
+          class="sidebar-logo-img"
         />
 
-        <div class="ms-3 text-white">
+        <div v-if="stateSideBar === 'active'" class="ms-3 text-white">
           <div class="text-caption font-weight-bold">
             Gobierno de El Salvador
           </div>
@@ -31,19 +28,6 @@
             Panel Administrativo
           </div>
         </div>
-      </div>
-
-      <div
-        v-else
-        class="d-flex justify-center align-center"
-        style="height: 58px;"
-      >
-        <v-img
-          :src="logoUrl"
-          alt="Logo"
-          max-width="40"
-          max-height="40"
-        />
       </div>
     </template>
 
@@ -129,6 +113,21 @@ const { logout, hasPermission } = useAuth();
   border-radius: 0;
 }
 
+
+/* Logo: misma altura y misma posición con el menú plegado o desplegado */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  height: 90px;
+  padding-left: 20px;
+  border-bottom: 1px solid #ACD7FF;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-logo-img {
+  flex: 0 0 40px;
+}
 /* =====================================================
    ITEMS DEL MENÚ
 ===================================================== */

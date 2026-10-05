@@ -114,11 +114,16 @@ class DashboardController extends Controller
 
         // 4. DATA PARA TABLA: ENCUESTAS CON MAYOR PARTICIPACIÓN (TOP 5 DE BARRAS)
         $topSurveys = $applySurveyFilters(Survey::query())
-            ->select('id', 'title')
-            ->withCount('responses')
-            ->orderBy('responses_count', 'DESC')
-            ->limit(5)
-            ->get();
+        ->select('surveys.id', 'surveys.title')
+        ->selectSub(
+            Response::query()
+                ->selectRaw('COUNT(DISTINCT COALESCE(CAST(participant_id AS CHAR), anonymous_identifier))')
+                ->whereColumn('responses.survey_id', 'surveys.id'),
+            'responses_count'
+        )
+        ->orderByDesc('responses_count')
+        ->limit(5)
+        ->get();
 
         // 5. DATA PARA TARJETA: ENCUESTAS MÁS RECIENTES
         //    Se agrega esta sección para alimentar el componente RecentSurveys
