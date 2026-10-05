@@ -88,7 +88,7 @@
       </v-col>
     </v-row>
 
-    <!-- Filtros (nuevo diseño) -->
+    <!-- Filtros -->
     <v-row dense class="mb-4 align-center filter-row">
       <v-col cols="12" sm="6" md="6" class="filter-col-search">
         <v-text-field
@@ -133,6 +133,17 @@
           <v-row dense>
             <v-col cols="12">
               <v-select
+                v-model="filtroEstado"
+                :items="estados"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="input-field filter-control"
+                label="Estado"
+              />
+            </v-col>
+            <v-col cols="12">
+              <v-select
                 v-model="filtroTipo"
                 :items="tipos"
                 variant="outlined"
@@ -174,7 +185,7 @@
     <!-- Tabla -->
     <v-card class="mb-4" variant="flat">
       <LoadingState v-if="cargandoEncuestas" message="Cargando encuestas" />
-      <v-table v-else>
+      <v-table v-else class="survey-table">
         <thead>
           <tr>
             <th class="text-label">Nombre</th>
@@ -187,8 +198,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="survey in filteredSurveys" :key="survey.id">
-            <td class="text-body-small">{{ survey.title }}</td>
+          <tr v-for="survey in encuestasPagina" :key="survey.id">
+            <td class="text-body-small col-nombre" :title="survey.title">{{ survey.title }}</td>
             <td class="text-body-small">{{ survey.owner?.name || '—' }}</td>
             <td>
               <v-btn
@@ -208,53 +219,33 @@
             </td>
             <td class="text-body-small">{{ survey.responses_count }}</td>
             <td>
-              <v-btn
-                icon size="x-small" variant="text" class="me-1 action-icon-btn"
-                title="Refrescar esta encuesta"
-                :loading="refrescandoId === survey.id"
-                @click="refrescarFila(survey)"
-              >
-                <v-icon>mdi-refresh</v-icon>
-              </v-btn>
-              <v-btn icon size="x-small" variant="text" class="me-1 action-icon-btn" title="Editar" @click="editarEncuesta(survey.id)">
-                <v-icon>mdi-pencil</v-icon>
-              </v-btn>
-              <v-btn
-                icon size="x-small" variant="text" class="me-1 action-icon-btn"
-                title="Duplicar encuesta"
-                :loading="duplicandoId === survey.id"
-                :disabled="!hasPermission('surveys.create')"
-                @click="duplicarEncuesta(survey)"
-              >
-                <v-icon>mdi-content-copy</v-icon>
-              </v-btn>
-              <v-btn icon size="x-small" variant="text" class="me-1 action-icon-btn" title="Ver resultados" @click="verResultados(survey.id)">
-                <v-icon>mdi-chart-box-outline</v-icon>
-              </v-btn>
-              <v-btn
-                icon size="x-small" variant="text" class="me-1 action-icon-btn"
-                title="Distribuir / obtener enlaces"
-                :disabled="!['approved', 'scheduled', 'published'].includes(survey.status?.slug)"
-                @click="abrirDistribucion(survey)"
-              >
-                <v-icon>mdi-share-variant-outline</v-icon>
-              </v-btn>
-              <v-btn
-                icon size="x-small" variant="text" class="me-1 action-icon-btn"
-                title="Historial de cambios"
-                :disabled="!hasPermission('changelogs.view')"
-                @click="abrirHistorial(survey)"
-              >
-                <v-icon>mdi-history</v-icon>
-              </v-btn>
-              <v-btn
-                icon size="x-small" variant="text" class="action-icon-btn"
-                title="Eliminar"
-                :disabled="!hasPermission('surveys.delete')"
-                @click="abrirModalEliminar(survey)"
-              >
-                <v-icon>mdi-delete</v-icon>
-              </v-btn>
+              <v-menu location="bottom end" content-class="acciones-menu">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon
+                    size="x-small"
+                    variant="text"
+                    class="action-icon-btn"
+                    title="Acciones"
+                    :loading="refrescandoId === survey.id || duplicandoId === survey.id"
+                  >
+                    <v-icon>mdi-dots-vertical</v-icon>
+                  </v-btn>
+                </template>
+
+                <v-list density="compact" min-width="220">
+                  <template v-for="accion in accionesDe(survey)" :key="accion.key">
+                    <v-divider v-if="accion.danger" class="my-1" />
+                    <v-list-item
+                      :prepend-icon="accion.icon"
+                      :title="accion.title"
+                      :class="{ 'text-error': accion.danger }"
+                      @click="accion.handler()"
+                    />
+                  </template>
+                </v-list>
+              </v-menu>
             </td>
           </tr>
         </tbody>
@@ -511,19 +502,19 @@
     <v-row class="align-center">
       <v-col cols="auto">
         <span class="text-body-small text-medium-emphasis">
-          Mostrando {{ filteredSurveys.length }} encuestas
+          Mostrando {{ rangoMostrado.desde }}–{{ rangoMostrado.hasta }} de {{ filteredSurveys.length }} encuestas
         </span>
       </v-col>
       <v-spacer />
       <v-col cols="auto">
-        <v-pagination :length="1" size="small" />
+        <v-pagination v-model="paginaActual" :length="totalPaginas" :total-visible="5" size="small" />
       </v-col>
     </v-row>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import backendApi from '@/services/backendApi';
 import useAuth from '@/composables/useAuth';
@@ -547,10 +538,16 @@ const miDependencia = JSON.parse(localStorage.getItem('survey_profile') || 'null
 
 const estados = [
   { title: 'Todos los estados', value: 'all' },
-  { title: 'Activa', value: 'published' },
-  { title: 'Finalizada', value: 'closed' },
   { title: 'Borrador', value: 'draft' },
+  { title: 'En revisión', value: 'review' },
+  { title: 'Correcciones solicitadas', value: 'needs_correction' },
+  { title: 'Aprobada', value: 'approved' },
+  { title: 'Rechazada', value: 'rejected' },
   { title: 'Programada', value: 'scheduled' },
+  { title: 'Activa', value: 'published' },
+  { title: 'En pausa', value: 'paused' },
+  { title: 'Finalizada', value: 'closed' },
+  { title: 'Archivada', value: 'archived' },
 ];
 
 const tipos = [
@@ -561,9 +558,9 @@ const tipos = [
 
 const filtrosRapidos = [
   { title: 'Todos', value: 'all' },
-  { title: 'Borrador', value: 'draft' },
   { title: 'Activas', value: 'published' },
   { title: 'Finalizadas', value: 'closed' },
+  { title: 'En revisión', value: 'review' },
 ];
 
 const cards = computed(() => {
@@ -590,32 +587,61 @@ const filteredSurveys = computed(() => {
   });
 });
 
+// ===================== PAGINACIÓN EN EL NAVEGADOR =====================
+const POR_PAGINA = 20;
+const paginaActual = ref(1);
+
+const totalPaginas = computed(() =>
+  Math.max(1, Math.ceil(filteredSurveys.value.length / POR_PAGINA))
+);
+
+const encuestasPagina = computed(() => {
+  const inicio = (paginaActual.value - 1) * POR_PAGINA;
+  return filteredSurveys.value.slice(inicio, inicio + POR_PAGINA);
+});
+
+const rangoMostrado = computed(() => {
+  const total = filteredSurveys.value.length;
+  if (total === 0) return { desde: 0, hasta: 0 };
+  const desde = (paginaActual.value - 1) * POR_PAGINA + 1;
+  return { desde, hasta: Math.min(desde + POR_PAGINA - 1, total) };
+});
+
+// Al cambiar un filtro se vuelve a la página 1.
+watch([filtroBusqueda, filtroEstado, filtroTipo, filtroDependencia], () => {
+  paginaActual.value = 1;
+});
+
+// Si al eliminar quedan menos páginas, no se queda en una vacía.
+watch(totalPaginas, (total) => {
+  if (paginaActual.value > total) paginaActual.value = total;
+});
+
+// ===================== COLOR DE ESTADO (todos en gris por ahora) =====================
 function estadoColor(slug) {
   switch (slug) {
     case 'published': return 'default';
     case 'scheduled': return 'default';
     case 'closed': return 'default';
     case 'draft': return 'default';
-    case 'approved': return 'default';        
-    case 'review': return 'default';              
-    case 'rejected': return 'default';           
-    case 'needs_correction': return 'default'; 
-    case 'archived': return 'default';   
-    case 'paused': return 'dedault';
+    case 'approved': return 'default';
+    case 'review': return 'default';
+    case 'rejected': return 'default';
+    case 'needs_correction': return 'default';
+    case 'archived': return 'default';
+    case 'paused': return 'default';
     default: return 'default';
-
 
     // case 'published': return 'success';
     // case 'scheduled': return 'warning';
     // case 'closed': return 'error';
     // case 'draft': return 'grey';
-    // case 'approved': return 'success';        
-    // case 'review': return 'info';              
-    // case 'rejected': return 'error';           
-    // case 'needs_correction': return 'warning'; 
-    // case 'archived': return 'grey-darken-1';   
-    // case 'paused': return 'orange';            
-    
+    // case 'approved': return 'success';
+    // case 'review': return 'info';
+    // case 'rejected': return 'error';
+    // case 'needs_correction': return 'warning';
+    // case 'archived': return 'grey-darken-1';
+    // case 'paused': return 'orange';
   }
 }
 
@@ -625,6 +651,37 @@ function formatVigencia(survey) {
   return `${inicio} - ${fin}`;
 }
 
+// ===================== ACCIONES DEL MENÚ =====================
+// Solo aparecen las que el usuario puede hacer y las que están disponibles
+// para el estado actual de la encuesta.
+function accionesDe(survey) {
+  const slug = survey.status?.slug;
+  const acciones = [];
+
+  acciones.push({ key: 'editar', title: 'Editar', icon: 'mdi-pencil', handler: () => editarEncuesta(survey.id) });
+  acciones.push({ key: 'resultados', title: 'Ver resultados', icon: 'mdi-chart-box-outline', handler: () => verResultados(survey.id) });
+
+  if (['approved', 'scheduled', 'published'].includes(slug)) {
+    acciones.push({ key: 'compartir', title: 'Compartir / enlaces', icon: 'mdi-share-variant-outline', handler: () => abrirDistribucion(survey) });
+  }
+
+  if (hasPermission('surveys.create')) {
+    acciones.push({ key: 'duplicar', title: 'Duplicar', icon: 'mdi-content-copy', handler: () => duplicarEncuesta(survey) });
+  }
+
+  if (hasPermission('changelogs.view')) {
+    acciones.push({ key: 'historial', title: 'Historial de cambios', icon: 'mdi-history', handler: () => abrirHistorial(survey) });
+  }
+
+  acciones.push({ key: 'refrescar', title: 'Refrescar', icon: 'mdi-refresh', handler: () => refrescarFila(survey) });
+
+  if (hasPermission('surveys.delete')) {
+    acciones.push({ key: 'eliminar', title: 'Eliminar', icon: 'mdi-delete', danger: true, handler: () => abrirModalEliminar(survey) });
+  }
+
+  return acciones;
+}
+
 function filtrar() {}
 
 function setFiltroEstado(value) {
@@ -632,6 +689,7 @@ function setFiltroEstado(value) {
 }
 
 function limpiarFiltrosAdicionales() {
+  filtroEstado.value = 'all';
   filtroTipo.value = 'all';
   filtroDependencia.value = null;
 }
@@ -1066,6 +1124,7 @@ onMounted(async () => {
 });
 </script>
 
+
 <style scoped>
 /* ===================== TARJETAS RESUMEN ===================== */
 .summary-row {
@@ -1198,41 +1257,56 @@ onMounted(async () => {
 }
 
 /* ===================== BOTONES DE ESTADO ===================== */
+/* Etiqueta neutra común + punto de color de la Propuesta 2 */
 .estado-btn {
   height: 23px !important;
-  min-width: 70px !important;
+  min-width: 90px !important;
   padding: 0 8px !important;
   border-radius: 6px !important;
   font-size: 10px !important;
   font-weight: 500 !important;
   text-transform: none !important;
+  text-align: left;
   letter-spacing: 0 !important;
+  white-space: nowrap;
+  background-color: #F4F6FD !important;
+  color: #313845 !important;
+  border: 1px solid #D2D9DD;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start !important;
 }
 
-.estado-btn--published {
-  min-width: 70px !important;
+.estado-btn :deep(.v-btn__content) {
+  justify-content: flex-start;
+  width: 100%;
+}
+/* Punto de color antes del texto */
+.estado-btn :deep(.v-btn__content)::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background-color: #D9D9D9;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
-.estado-btn--draft {
-  min-width: 70px !important;
-  
-  color: #313845 !important;
-}
+.estado-btn--published :deep(.v-btn__content)::before { background-color: #9EF18D; }
+.estado-btn--scheduled :deep(.v-btn__content)::before { background-color: #F1B550; }
+.estado-btn--closed :deep(.v-btn__content)::before,
+.estado-btn--rejected :deep(.v-btn__content)::before { background-color: #E42716; }
 
-.estado-btn--scheduled {
-  min-width: 85px !important;
-}
+.estado-btn--review :deep(.v-btn__content)::before,
+.estado-btn--needs_correction :deep(.v-btn__content)::before,
+.estado-btn--paused :deep(.v-btn__content)::before { background-color: #4880FF; }
 
-.estado-btn--closed {
-  min-width: 70px !important;
-}
+.estado-btn--approved :deep(.v-btn__content)::before { background-color: #2D52A7; }
 
-.estado-btn--default {
-  min-width: 70px !important;
-}
+.estado-btn--draft :deep(.v-btn__content)::before,
+.estado-btn--archived :deep(.v-btn__content)::before,
+.estado-btn--default :deep(.v-btn__content)::before { background-color: #D9D9D9; }
 
 /* ===================== ÍCONOS DE ACCIONES ===================== */
 .action-icon-btn {
@@ -1254,5 +1328,75 @@ onMounted(async () => {
   .filter-col-search {
     flex: 1 1 100%;
   }
+}
+
+/* ===================== TABLA DE ENCUESTAS: nada baja de línea ===================== */
+.survey-table :deep(th),
+.survey-table :deep(td) {
+  white-space: nowrap;
+}
+
+/* Si no cabe, aparece scroll horizontal en vez de partir líneas */
+.survey-table :deep(.v-table__wrapper) {
+  overflow-x: auto;
+}
+
+/* Nombre en una sola línea; si es muy largo se corta con "…" (el nombre completo sale al pasar el mouse) */
+.col-nombre {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
+
+<!-- ============================================================
+     MENÚ DE ACCIONES (v-menu) — azul claro translúcido
+     Va SIN scoped porque el menú se dibuja fuera del componente
+     y los estilos con scope no lo alcanzan.
+     ============================================================ -->
+<style>
+.acciones-menu .v-list {
+  background:
+    linear-gradient(rgba(72, 128, 255, 0.14), rgba(72, 128, 255, 0.14)),
+    rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(72, 128, 255, 0.35);
+  border-radius: 7px;
+  padding: 4px;
+}
+
+.acciones-menu .v-list-item {
+  min-height: 34px;
+  border-radius: 4px;
+  color: #2D52A7;
+}
+
+.acciones-menu .v-list-item:hover {
+  background: rgba(72, 128, 255, 0.22);
+}
+
+.acciones-menu .v-list-item-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.acciones-menu .v-list-item .v-icon {
+  font-size: 16px;
+  opacity: 1;
+}
+
+.acciones-menu .v-list-item__spacer {
+  width: 10px !important;
+}
+
+.acciones-menu .v-divider {
+  border-color: rgba(72, 128, 255, 0.35);
+  opacity: 1;
+}
+
+.acciones-menu .v-list-item.text-error {
+  color: #E42716 !important;
 }
 </style>
