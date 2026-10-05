@@ -1,17 +1,26 @@
 <script setup>
-import { onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import LoadingState from "@/components/LoadingState.vue";
 import TheFooter from "./components/TheFooter.vue";
 import TheHeader from "./components/TheHeader.vue";
 import useAuth from "./composables/useAuth";
 import TheMenu from "./components/TheMenu.vue";
 import Alert from "@/components/Alert.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
-import useMenu from "@/composables/useMenu";
+import useMenu from "./composables/useMenu";
 
 const { accessToken, refreshToken, user, isLoggedIn, surveyProfile, getUserInfo } = useAuth();
 const { stateSideBar } = useMenu();
 const route = useRoute();
+const router = useRouter();
+
+// Hasta que el router decide la ruta (incluida la validación de sesión)
+// no se dibuja el menú ni el encabezado.
+const rutaLista = ref(false);
+router.isReady().then(() => {
+  rutaLista.value = true;
+});
 
 onMounted(async () => {
   accessToken.value = localStorage.getItem("access_token");
@@ -33,16 +42,17 @@ onMounted(async () => {
          dentro del panel autenticado. En login/callback y en las
          pantallas públicas de respuesta de encuesta se ocultan por
          completo, ver meta.hideChrome en router/index.js. -->
-    <TheMenu v-if="!route.meta.hideChrome" />
-    <TheHeader v-if="!route.meta.hideChrome" />
+    <TheMenu v-if="rutaLista && !route.meta.hideChrome" />
+    <TheHeader v-if="rutaLista && !route.meta.hideChrome" />
     <v-main style="background-color: #F4F7FD;">
       <v-container fluid style="padding-left: 32px; padding-right: 32px;">
+        <LoadingState v-if="!rutaLista" message="Verificando sesión" />
         <Alert />
         <ConfirmDialog />
         <RouterView />
       </v-container>
     </v-main>
-    <TheFooter />
+    <TheFooter v-if="rutaLista" />
   </v-app>
 </template>
 
