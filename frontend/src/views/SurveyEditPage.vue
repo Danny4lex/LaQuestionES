@@ -728,7 +728,7 @@
       <v-dialog v-model="dialogComentarios" max-width="560">
         <v-card>
           <v-card-title class="text-h6">
-            Comentarios de la sección
+            <h3 class="text-page-title mt-8">Editar encuesta</h3>
             <div class="text-body-small text-medium-emphasis font-weight-regular">
               {{ seccionComentarios?.name || '(sin nombre)' }}
             </div>
@@ -1528,6 +1528,7 @@ onMounted(async () => {
 :deep(.v-field) {
   background-color: #E8F0F8 !important;
   border-radius: 4px !important;
+  
 }
 
 :deep(.v-field--variant-outlined .v-field__outline) {
@@ -1549,7 +1550,7 @@ onMounted(async () => {
 :deep(.input-field input),
 :deep(.input-field textarea),
 :deep(.input-field .v-select__selection-text) {
-  font-size: 10px !important;
+  font-size: 12px !important;
   font-weight: 400 !important;
   letter-spacing: 0 !important;
 }

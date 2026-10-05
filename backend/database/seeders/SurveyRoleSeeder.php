@@ -51,7 +51,7 @@ class SurveyRoleSeeder extends Seeder
                 // (lo cual, al ser público, no requiere login de todas
                 // formas — este rol es para cuentas que solo deben
                 // usarse para eso, nunca para gestión).
-                'name'        => 'Respondedor',
+                'name'        => 'Encuestado',
                 'description' => 'Solo puede responder encuestas públicas o por invitación',
                 'permissions' => [
                     'surveys.respond',
