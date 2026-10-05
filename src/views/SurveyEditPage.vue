@@ -651,7 +651,7 @@
         </div>
       </v-form>
 
-            <v-dialog v-model="previewDialog" max-width="900">
+      <v-dialog v-model="previewDialog" max-width="900">
         <v-card class="preview-card" variant="flat">
           <!-- Cabecera -->
           <div class="preview-card-header">
@@ -753,20 +753,20 @@
                 class="comentario-card mb-3"
                 :class="esAdministrador(c) ? 'comentario-card--admin' : 'comentario-card--encuestador'"
               >
-                <div class="d-flex align-start ga-2">
-                  <v-avatar :color="esAdministrador(c) ? '#8A6D00' : '#2D52A7'" size="30" class="flex-shrink-0">
+                <div class="comentario-fila">
+                  <v-avatar :color="esAdministrador(c) ? '#8A6D00' : '#2D52A7'" size="32" class="flex-shrink-0">
                     <span class="text-white text-caption font-weight-bold">{{ inicialesComentario(c) }}</span>
                   </v-avatar>
                   <div class="flex-grow-1">
-                    <div class="d-flex justify-space-between align-center mb-1">
-                      <span class="text-body-small font-weight-bold">
+                    <div class="d-flex justify-space-between align-center comentario-header">
+                      <span class="text-body-small font-weight-bold comentario-nombre">
                         {{ c.user?.name || 'Usuario' }}
                         <v-chip
                           v-if="c.user?.role?.name"
                           size="x-small"
                           :color="esAdministrador(c) ? '#8A6D00' : '#2D52A7'"
                           variant="flat"
-                          class="ms-1 text-white"
+                          class="text-white"
                         >
                           {{ c.user.role.name }}
                         </v-chip>
@@ -1473,13 +1473,15 @@ onMounted(async () => {
   opacity: 1;
 }
 
-/* Tarjetas de comentarios del "papelito" — con recuadro y borde de color
-   para que se note que es una observación importante, no una línea de
-   texto suelta. */
+/* =============================================
+   TARJETAS DE COMENTARIOS DEL "PAPELITO"
+   Todas las reglas usan !important y valores en píxeles para que no
+   las pise ninguna clase utilitaria de Vuetify ni estilos heredados.
+============================================= */
 .comentario-card {
   background-color: #FAFAFA;
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 16px 18px !important;
   border-left: 4px solid #B4B2A9;
 }
 
@@ -1493,7 +1495,32 @@ onMounted(async () => {
   border-left-color: #2D52A7;
 }
 
+/* Círculo de iniciales | nombre y comentario */
+.comentario-fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px !important;
+}
+
+/* El encabezado mide más que el círculo (32px), así el comentario
+   empieza debajo de él, no a su altura. */
+.comentario-header {
+  min-height: 33px !important;
+}
+
+/* Nombre y cargo con espacio entre ellos */
+.comentario-nombre {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 14px !important;
+  gap: 12px !important;
+  line-height: 1.4 !important;
+}
+
 .comentario-texto {
+  margin-top: 10px !important;
+  line-height: 1.6 !important;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -1639,6 +1666,7 @@ onMounted(async () => {
   box-shadow: none !important;
   text-transform: none !important;
 }
+
 /* =============================================
    PREVIEW BOLETÍN COMPLETO
 ============================================= */
