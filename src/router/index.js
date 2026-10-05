@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import NotFoundView from "../views/NotFoundView.vue";
+import backendApi from "../services/backendApi";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -119,14 +120,37 @@ const router = createRouter({
   ],
 });
 
-// add a global beforeEnter guard to check if the route requires authentication and if the user has an access token
-router.beforeEach((to, from, next) => {
+// La sesión se valida contra el backend una vez por carga de página.
+let sesionVerificada = false;
+
+router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !hasAccessToken()) {
     return next("/login");
   }
 
+  // Tener un token guardado no basta: puede estar vencido o ser inválido.
+  // Se confirma con el backend ANTES de mostrar el panel, así nunca se ve
+  // el dashboard "de paso" antes de caer al login.
+  if (to.meta.requiresAuth && !sesionVerificada) {
+    try {
+      const { data } = await backendApi.post(
+        import.meta.env.VITE_BACKEND_USER_API_ENDPOINT
+      );
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("survey_profile", JSON.stringify(data.survey_profile));
+      sesionVerificada = true;
+    } catch (e) {
+      // Con respuesta del servidor = sesión inválida: se limpia.
+      // Sin respuesta (servidor caído) solo se manda al login.
+      if (e.response) {
+        localStorage.clear();
+      }
+      return next("/login");
+    }
+  }
+
   // Sesión válida, pero el rol no tiene acceso al panel administrativo
-  // en absoluto (rol "Respondedor" — solo puede responder encuestas,
+  // en absoluto (rol "Encuestado" — solo puede responder encuestas,
   // que es público y no pasa por aquí). Se le devuelve al login en vez
   // de dejarlo entrar a una pantalla que el backend igual le va a
   // rechazar con 403.
