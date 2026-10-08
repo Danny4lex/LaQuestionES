@@ -6,7 +6,7 @@
       <p v-if="survey.description" class="survey-description">
         {{ survey.description }}
       </p>
-      <p v-if="participant?.email && !survey.is_anonymous" class="survey-participant">
+      <p v-if="participant?.email && !esAnonima" class="survey-participant">
         Invitación para: {{ participant.name || participant.email }}
       </p>
     </div>
@@ -32,54 +32,71 @@
         />
       </div>
 
-      <!-- ============ Paso: datos del encuestado ============ -->
-      <div v-if="currentStep.kind === 'datos'" class="survey-section">
+            <!-- ============ Paso: datos del encuestado ============ -->
+            <div v-if="currentStep.kind === 'datos'" class="survey-section">
         <h2 class="section-title">Datos del encuestado</h2>
-        <p class="section-description">
-          Completa tus datos para comenzar la encuesta. Los campos con * son obligatorios.
-        </p>
 
-        <div class="survey-question">
-          <p class="question-statement">Nombre completo <span class="mandatory-mark">*</span></p>
-          <v-text-field
-            v-model="respondent.name"
-            placeholder="Escribe tu nombre"
-            variant="outlined"
+        <!-- Solo si la encuesta permite participantes anónimos -->
+        <div v-if="survey.anonymity_mode === 'optional'" class="survey-question">
+          <v-switch
+            v-model="anonimoElegido"
+            color="primary"
             density="compact"
-            maxlength="255"
             hide-details
-            class="survey-input"
+            label="Deseo participar de forma anónima"
           />
+          <p class="section-description mt-2 mb-0">
+            Si lo activas, no se te pedirán ni se guardarán tus datos personales.
+          </p>
         </div>
 
-        <div class="survey-question">
-          <p class="question-statement">Correo electrónico <span class="mandatory-mark">*</span></p>
-          <v-text-field
-            v-model="respondent.email"
-            type="email"
-            placeholder="correo@ejemplo.com"
-            variant="outlined"
-            density="compact"
-            maxlength="255"
-            :readonly="emailLocked"
-            hide-details
-            class="survey-input"
-          />
-        </div>
+        <template v-if="!esAnonima">
+          <p class="section-description">
+            Completa tus datos para comenzar la encuesta. Los campos con * son obligatorios.
+          </p>
 
-        <div class="survey-question">
-          <p class="question-statement">Teléfono</p>
-          <v-text-field
-            v-model="respondent.phone"
-            type="tel"
-            placeholder="7000-0000"
-            variant="outlined"
-            density="compact"
-            maxlength="50"
-            hide-details
-            class="survey-input"
-          />
-        </div>
+          <div class="survey-question">
+            <p class="question-statement">Nombre completo <span class="mandatory-mark">*</span></p>
+            <v-text-field
+              v-model="respondent.name"
+              placeholder="Escribe tu nombre"
+              variant="outlined"
+              density="compact"
+              maxlength="255"
+              hide-details
+              class="survey-input"
+            />
+          </div>
+
+          <div class="survey-question">
+            <p class="question-statement">Correo electrónico <span class="mandatory-mark">*</span></p>
+            <v-text-field
+              v-model="respondent.email"
+              type="email"
+              placeholder="correo@ejemplo.com"
+              variant="outlined"
+              density="compact"
+              maxlength="255"
+              :readonly="emailLocked"
+              hide-details
+              class="survey-input"
+            />
+          </div>
+
+          <div class="survey-question">
+            <p class="question-statement">Teléfono</p>
+            <v-text-field
+              v-model="respondent.phone"
+              type="tel"
+              placeholder="7000-0000"
+              variant="outlined"
+              density="compact"
+              maxlength="50"
+              hide-details
+              class="survey-input"
+            />
+          </div>
+        </template>
       </div>
 
       <!-- ============ Paso: sección de la encuesta ============ -->
@@ -255,11 +272,20 @@ const sections = computed(() =>
     .filter((section) => section.questions.length > 0)
 );
 
-// Pasos: 1) datos del encuestado (salvo encuesta anónima), luego una
-// sección de la encuesta por paso.
+// Privacidad: "identified" pide datos, "optional" deja elegir al encuestado
+// y "anonymous" nunca los pide.
+const anonimoElegido = ref(false);
+const esAnonima = computed(
+  () =>
+    props.survey.anonymity_mode === "anonymous" ||
+    (props.survey.anonymity_mode === "optional" && anonimoElegido.value)
+);
+
+// Pasos: 1) datos del encuestado (salvo encuesta totalmente anónima), luego
+// una sección de la encuesta por paso.
 const steps = computed(() => {
   const list = [];
-  if (!props.survey.is_anonymous) {
+  if (props.survey.anonymity_mode !== "anonymous") {
     list.push({ kind: "datos", title: "Datos del encuestado" });
   }
   sections.value.forEach((section) => {
@@ -293,6 +319,7 @@ function scrollArriba() {
 }
 
 function validarDatos() {
+  if (esAnonima.value) return null;
   if (!respondent.name.trim()) return "Escribe tu nombre.";
   if (!respondent.email.trim()) return "Escribe tu correo electrónico.";
   if (!/^\S+@\S+\.\S+$/.test(respondent.email.trim())) return "El correo electrónico no es válido.";
@@ -368,7 +395,10 @@ function enviar() {
   stepError.value = null;
 
   const payload = { answers: armarRespuestas() };
-  if (!props.survey.is_anonymous) {
+  if (props.survey.anonymity_mode === "optional") {
+    payload.anonymous = anonimoElegido.value;
+  }
+  if (!esAnonima.value) {
     payload.respondent = {
       name: respondent.name.trim(),
       email: respondent.email.trim(),

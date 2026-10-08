@@ -60,7 +60,7 @@ onMounted(async () => {
   }
 });
 
-async function submitSurvey({ respondent, answers }) {
+async function submitSurvey({ respondent, anonymous, answers }) {
   submitError.value = null;
   submitting.value = true;
 
@@ -70,6 +70,7 @@ async function submitSurvey({ respondent, answers }) {
     const body = respondent
       ? { name: respondent.name, phone: respondent.phone, answers }
       : { answers };
+    if (anonymous !== undefined) body.anonymous = anonymous;
     await axios.post(`${baseUrl}/public/participants/${route.params.token}/submit`, body);
 
     submitSuccess.value = "¡Gracias! Tus respuestas fueron registradas correctamente.";
