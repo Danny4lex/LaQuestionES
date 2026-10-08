@@ -250,21 +250,15 @@
                 />
               </v-col>
 
-            <v-col cols="12" md="6">
-              <v-switch
-                v-model="unicaRespuesta"
-                color="primary"
-                density="compact"
-                hide-details
-                label="Permitir una sola respuesta por persona"
-              />
+            <v-col cols="12" md="6"><br>
+              <ToggleSwitch v-model="unicaRespuesta" label="Permitir una sola respuesta por persona" />
             </v-col>
 
             <v-col cols="12" md="4">
               <v-text-field
                 v-model="fechaInicio"
-                label="Fecha inicio"
-                type="date"
+                label="Fecha y hora de inicio"
+                type="datetime-local"
                 variant="outlined"
                 density="compact"
                 hide-details
@@ -275,8 +269,8 @@
             <v-col cols="12" md="4">
               <v-text-field
                 v-model="fechaFin"
-                label="Fecha fin"
-                type="date"
+                label="Fecha y hora de fin"
+                type="datetime-local"
                 variant="outlined"
                 density="compact"
                 hide-details
@@ -820,6 +814,7 @@ import backendApi from '@/services/backendApi';
 import useAuth from '@/composables/useAuth';
 import useAlert from '@/composables/useAlert';
 import useConfirm from '@/composables/useConfirm';
+import ToggleSwitch from '@/components/ToggleSwitch.vue';
 
 const { hasPermission } = useAuth();
 const { alert } = useAlert();
@@ -1255,13 +1250,23 @@ async function cargarEncuesta(id) {
   categoriaId.value = survey.survey_category_id;
   estadoId.value = survey.status_id;
   dependenciaId.value = survey.dependency_id;
-  fechaInicio.value = survey.start_date ? survey.start_date.slice(0, 10) : null;
-  fechaFin.value = survey.end_date ? survey.end_date.slice(0, 10) : null;
+  fechaInicio.value = aInputFechaHora(survey.start_date);
+fechaFin.value = aInputFechaHora(survey.end_date);
 
   // Carga reactiva de la estructura
   cargarEstructura(survey);
 }
 
+
+
+// El backend entrega la fecha en formato ISO (UTC); el campo necesita
+// "AAAA-MM-DDTHH:mm" en hora local.
+function aInputFechaHora(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 async function syncStructure(surveyId) {
   for (const seccion of secciones) {
     let sectionId = seccion.backendId;
@@ -1600,7 +1605,7 @@ onMounted(async () => {
   cursor: pointer;
   background: #ffffff;
   padding: 3px;
-  width: 38px;
+  width: 33px;
   height: 20px;
   border-radius: 10px;
   box-sizing: border-box;

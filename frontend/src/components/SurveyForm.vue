@@ -38,13 +38,7 @@
 
         <!-- Solo si la encuesta permite participantes anónimos -->
         <div v-if="survey.anonymity_mode === 'optional'" class="survey-question">
-          <v-switch
-            v-model="anonimoElegido"
-            color="primary"
-            density="compact"
-            hide-details
-            label="Deseo participar de forma anónima"
-          />
+          <ToggleSwitch v-model="anonimoElegido" label="Deseo participar de forma anónima" />
           <p class="section-description mt-2 mb-0">
             Si lo activas, no se te pedirán ni se guardarán tus datos personales.
           </p>
@@ -244,6 +238,7 @@
 
 <script setup>
 import { ref, reactive, computed } from "vue";
+import ToggleSwitch from "@/components/ToggleSwitch.vue";
 
 const props = defineProps({
   survey: { type: Object, required: true },
