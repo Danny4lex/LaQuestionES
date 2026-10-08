@@ -206,9 +206,9 @@
                 :color="estadoColor(survey.status?.slug)"
                 variant="flat"
                 size="small"
-                :class="['estado-btn', `estado-btn--${survey.status?.slug || 'default'}`]"
-              >
-                {{ survey.status?.name || '—' }}
+                :class="['estado-btn', `estado-btn--${faseEncuesta(survey).slug || 'default'}`]"
+                  >
+                    {{ faseEncuesta(survey).nombre || '—' }}
               </v-btn>
             </td>
             <td class="text-body-small">{{ formatVigencia(survey) }}</td>
@@ -622,6 +622,7 @@ const dialogFiltros = ref(false);
 const miDependencia = JSON.parse(localStorage.getItem('survey_profile') || 'null')?.dependency?.name || null;
 
 const estados = [
+  { title: 'Publicada', value: 'published_waiting' },
   { title: 'Todos los estados', value: 'all' },
   { title: 'Borrador', value: 'draft' },
   { title: 'En revisión', value: 'review' },
@@ -649,7 +650,7 @@ const filtrosRapidos = [
 ];
 
 const cards = computed(() => {
-  const activas = surveys.value.filter(s => s.status?.slug === 'published').length;
+  const activas = surveys.value.filter(s => faseEncuesta(s).slug === 'published').length;
   const finalizadas = surveys.value.filter(s => s.status?.slug === 'closed').length;
   const borradores = surveys.value.filter(s => s.status?.slug === 'draft').length;
   const totalRespuestas = surveys.value.reduce((sum, s) => sum + (s.responses_count || 0), 0);
@@ -666,7 +667,7 @@ const filteredSurveys = computed(() => {
   return surveys.value.filter(s => {
     const texto = s.title?.toLowerCase() || '';
     const coincideBusqueda = !filtroBusqueda.value || texto.includes(filtroBusqueda.value.toLowerCase());
-    const coincideEstado = filtroEstado.value === 'all' || s.status?.slug === filtroEstado.value;
+    const coincideEstado = filtroEstado.value === 'all' || faseEncuesta(s).slug === filtroEstado.value;
     const coincideTipo = filtroTipo.value === 'all' || s.type?.name === filtroTipo.value;
     return coincideBusqueda && coincideEstado && coincideTipo;
   });
@@ -728,6 +729,15 @@ function estadoColor(slug) {
     // case 'archived': return 'grey-darken-1';
     // case 'paused': return 'orange';
   }
+}
+
+// "Publicada" (aún no abre) vs "Publicada / Activa" (ya abrió).
+function faseEncuesta(survey) {
+  const slug = survey.status?.slug;
+  if (slug === 'published' && survey.start_date && new Date(survey.start_date) > new Date()) {
+    return { slug: 'published_waiting', nombre: 'Publicada' };
+  }
+  return { slug, nombre: survey.status?.name };
 }
 
 function formatVigencia(survey) {
@@ -1491,6 +1501,7 @@ onMounted(async () => {
 .estado-btn--draft :deep(.v-btn__content)::before,
 .estado-btn--archived :deep(.v-btn__content)::before,
 .estado-btn--default :deep(.v-btn__content)::before { background-color: #D9D9D9; }
+.estado-btn--published_waiting :deep(.v-btn__content)::before { background-color: #4880FF; }
 
 /* ===================== ÍCONOS DE ACCIONES ===================== */
 .action-icon-btn {
