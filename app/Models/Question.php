@@ -24,6 +24,7 @@ class Question extends Model
         'sort_order',
         'section_id',
         'template_id',
+        'template_section_name',
     ];
 
     protected $casts = [
