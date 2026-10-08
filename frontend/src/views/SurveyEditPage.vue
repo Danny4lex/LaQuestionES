@@ -239,14 +239,16 @@
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-switch
-                v-model="esAnonima"
-                color="primary"
-                density="compact"
-                hide-details
-                label="Encuesta anónima (no pide datos del encuestado)"
-              />
-            </v-col>
+                <v-select
+                  v-model="modoAnonimato"
+                  :items="opcionesAnonimato"
+                  label="Privacidad de los encuestados"
+                  variant="outlined"
+                  density="compact"
+                  hide-details="auto"
+                  :messages="avisoAnonimato"
+                />
+              </v-col>
 
             <v-col cols="12" md="6">
               <v-switch
@@ -936,7 +938,18 @@ const esEditable = computed(() => {
 const titulo = ref('');
 const descripcion = ref('');
 const tipoId = ref(null);
-const esAnonima = ref(false);
+const modoAnonimato = ref('identified');
+const opcionesAnonimato = [
+  { title: 'Se piden los datos del encuestado', value: 'identified' },
+  { title: 'El encuestado decide si es anónimo', value: 'optional' },
+  { title: 'Todos los encuestados son anónimos', value: 'anonymous' },
+];
+// Aviso cuando "una sola respuesta" no se puede garantizar del todo.
+const avisoAnonimato = computed(() =>
+  modoAnonimato.value !== 'identified' && unicaRespuesta.value
+    ? 'Con respuestas anónimas, "una sola respuesta" se controla solo por IP y puede no ser exacto.'
+    : ''
+);
 const unicaRespuesta = ref(false);
 const categoriaId = ref(null);
 const estadoId = ref(null);
@@ -1237,7 +1250,7 @@ async function cargarEncuesta(id) {
   titulo.value = survey.title;
   descripcion.value = survey.description || '';
   tipoId.value = survey.type_id;
-  esAnonima.value = !!survey.is_anonymous;
+  modoAnonimato.value = survey.anonymity_mode || 'identified';
   unicaRespuesta.value = !!survey.is_single_response;
   categoriaId.value = survey.survey_category_id;
   estadoId.value = survey.status_id;
@@ -1394,7 +1407,7 @@ async function guardarEncuesta() {
     title: titulo.value,
     description: descripcion.value,
     is_single_response: unicaRespuesta.value,
-    is_anonymous: esAnonima.value,
+    anonymity_mode: modoAnonimato.value,
     survey_category_id: categoriaId.value,
     type_id: tipoId.value,
     start_date: fechaInicio.value || null,

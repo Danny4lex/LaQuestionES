@@ -21,7 +21,7 @@ class Survey extends Model
         'title',
         'description',
         'is_single_response',
-        'is_anonymous',
+        'anonymity_mode',
         'start_date',
         'end_date',
         'section_id',
@@ -35,7 +35,6 @@ class Survey extends Model
 
     protected $casts = [
         'is_single_response' => 'boolean',
-        'is_anonymous' => 'boolean',
         'section_id' => 'integer',
         'dependency_id' => 'integer',
         'user_id' => 'integer',
