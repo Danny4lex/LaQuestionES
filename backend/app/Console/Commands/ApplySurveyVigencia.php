@@ -54,7 +54,7 @@ class ApplySurveyVigencia extends Command
 
         $surveys = Survey::whereHas('status', fn($q) => $q->where('slug', 'scheduled'))
             ->whereNotNull('start_date')
-            ->whereDate('start_date', '<=', now())
+            ->where('start_date', '<=', now())
             ->get();
 
         foreach ($surveys as $survey) {
@@ -81,7 +81,7 @@ class ApplySurveyVigencia extends Command
 
         $surveys = Survey::whereHas('status', fn($q) => $q->where('slug', 'published'))
             ->whereNotNull('end_date')
-            ->whereDate('end_date', '<', now())
+            ->where('end_date', '<', now())
             ->get();
 
         foreach ($surveys as $survey) {
