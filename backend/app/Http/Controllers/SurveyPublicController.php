@@ -30,7 +30,7 @@ class SurveyPublicController extends Controller
         }
 
         return response()->json(
-            $survey->only(['id', 'title', 'description', 'is_single_response', 'is_anonymous'])
+            $survey->only(['id', 'title', 'description', 'is_single_response', 'anonymity_mode'])
                 + ['sections' => $survey->load('sections.questions.options')->sections],
             200
         );
@@ -55,7 +55,7 @@ class SurveyPublicController extends Controller
 
         return response()->json([
             'participant' => $participant->only(['id', 'name', 'email', 'phone', 'invitation_status']),
-            'survey' => $participant->survey->only(['id', 'title', 'description', 'is_single_response', 'is_anonymous']),
+            'survey' => $participant->survey->only(['id', 'title', 'description', 'is_single_response', 'anonymity_mode']),
             'sections' => $participant->survey->load('sections.questions.options')->sections,
         ], 200);
     }
@@ -70,12 +70,13 @@ class SurveyPublicController extends Controller
         // Encuesta identificada: nombre y correo son obligatorios (los datos
         // del encuestado que pide la primera sección). Encuesta anónima: no
         // se piden ni se guardan.
-        $datosRequeridos = $survey->is_anonymous ? 'nullable' : 'required';
+        $datosRequeridos = $this->anonymizeService->isAnonymousSubmission($survey, $request) ? 'nullable' : 'required';
 
         $validated = $request->validate([
             'name' => $datosRequeridos . '|string|max:255',
             'email' => $datosRequeridos . '|email|max:255',
             'phone' => 'nullable|string|max:50',
+            'anonymous' => 'sometimes|boolean',
             'answers' => 'required|array|min:1',
             'answers.*.question_id' => 'required|exists:questions,id',
             'answers.*.value' => 'nullable',
@@ -109,6 +110,7 @@ class SurveyPublicController extends Controller
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:50',
+            'anonymous' => 'sometimes|boolean',
             'answers' => 'required|array|min:1',
             'answers.*.question_id' => 'required|exists:questions,id',
             'answers.*.value' => 'nullable',
@@ -119,7 +121,7 @@ class SurveyPublicController extends Controller
         // Encuesta identificada: el invitado completa su nombre y teléfono
         // (el correo ya es el de la invitación y no se modifica). En una
         // encuesta anónima no se guarda ningún dato personal.
-        if (!$survey->is_anonymous) {
+        if (!$this->anonymizeService->isAnonymousSubmission($survey, $request)) {
             $participant->update([
                 'name' => $validated['name'] ?? $participant->name,
                 'phone' => $validated['phone'] ?? $participant->phone,
@@ -181,7 +183,7 @@ class SurveyPublicController extends Controller
         // Anónima: respuestas sin participant_id. Un MISMO identificador
         // por envío para poder agruparlas después como "un encuestado"
         // (antes cada fila generaba su propio UUID y se separaban).
-        $esAnonima = $survey->is_anonymous || $participant->type === 'anonimo';
+        $esAnonima = $this->anonymizeService->isAnonymousSubmission($survey, $request) || $participant->type === 'anonimo';
         $anonymousId = $esAnonima ? (string) \Illuminate\Support\Str::uuid() : null;
 
         DB::transaction(function () use ($request, $survey, $participant, $answers, $allQuestions, $esAnonima, $anonymousId) {

@@ -115,6 +115,8 @@ Route::middleware(['auth:api', 'auth.external'])->group(function () {
     // 2.6 Plantillas de encuesta
     // -------------------------------------------------------------------
     Route::post('/templates/{template}/convert', [TemplateController::class, 'convertToSurvey']);
+    Route::post('/surveys/{survey}/save-as-template', [TemplateController::class, 'storeFromSurvey'])
+    ->middleware('permission:surveys.create');
     Route::apiResource('templates', TemplateController::class);
 
     // -------------------------------------------------------------------
@@ -163,6 +165,8 @@ Route::middleware(['auth:api', 'auth.external'])->group(function () {
     Route::get('/participants', [ParticipantController::class, 'index']);
     Route::get('/participants/{participant}', [ParticipantController::class, 'show']);
     Route::post('/participants/invite', [ParticipantController::class, 'invite']);
+    Route::get('/surveys/{survey}/organization-members', [ParticipantController::class, 'organizationPreview']);
+    Route::post('/surveys/{survey}/invite-organization', [ParticipantController::class, 'inviteOrganization']);
     Route::delete('/participants/{participant}', [ParticipantController::class, 'destroy']);
 
     // -------------------------------------------------------------------
