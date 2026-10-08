@@ -387,6 +387,41 @@
             <p class="text-body-small mb-3">
               Esta encuesta es <strong>Privada</strong>: cada persona necesita una invitación individual con su propio enlace.
             </p>
+            <div class="mb-4">
+              <div class="text-body-small font-weight-bold mb-1">Compartir con la organización</div>
+              <p class="text-body-small text-medium-emphasis mb-2">
+                Invita a todas las personas de
+                <strong>{{ encuestaDistribucion?.department?.name || 'la organización' }}</strong>
+                con su propio enlace.
+              </p>
+              <v-switch
+                v-model="incluirSubdependencias"
+                color="primary"
+                density="compact"
+                hide-details
+                label="Incluir sus sub-dependencias"
+              />
+              <p v-if="cargandoOrganizacion" class="text-body-small text-medium-emphasis my-2">
+                Calculando...
+              </p>
+              <p v-else-if="resumenOrganizacion" class="text-body-small my-2">
+                {{ resumenOrganizacion.total_members }} miembros ·
+                {{ resumenOrganizacion.already_invited }} ya invitados ·
+                <strong>{{ resumenOrganizacion.to_invite }} por invitar</strong>
+              </p>
+              <v-btn
+                color="primary"
+                size="small"
+                class="text-button"
+                :disabled="!resumenOrganizacion || resumenOrganizacion.to_invite === 0"
+                :loading="invitandoOrganizacion"
+                @click="invitarOrganizacion"
+              >
+                Invitar a toda la organización
+              </v-btn>
+            </div>
+            <v-divider class="mb-3" />
+
             <v-textarea
               v-model="emailsInvitar"
               label="Correos a invitar (uno por línea)"
@@ -460,6 +495,56 @@
           <v-spacer />
           <v-btn variant="outlined" color="secondary" class="text-button" @click="cerrarDistribucion">
             Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+        <!-- Diálogo: guardar la encuesta como plantilla -->
+        <v-dialog v-model="dialogPlantilla" max-width="480" persistent>
+      <v-card>
+        <v-card-title class="text-h6">Guardar como plantilla</v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="plantillaForm.name"
+            label="Nombre de la plantilla"
+            variant="outlined"
+            density="compact"
+            maxlength="255"
+            class="mb-3"
+            hide-details="auto"
+          />
+          <v-textarea
+            v-model="plantillaForm.description"
+            label="Descripción (opcional)"
+            variant="outlined"
+            density="compact"
+            rows="3"
+            class="mb-2"
+            hide-details="auto"
+          />
+          <v-switch
+            v-model="plantillaForm.is_public"
+            color="primary"
+            density="compact"
+            hide-details
+            label="Compartir con toda la institución"
+          />
+          <p class="text-body-small text-medium-emphasis mt-2 mb-0">
+            Se guardan las secciones, preguntas y opciones. No se copian respuestas,
+            fechas ni participantes. Si no la compartes, solo tú (y un administrador) la verás.
+          </p>
+          <v-alert v-if="errorPlantilla" type="error" variant="tonal" density="compact" class="mt-3">
+            {{ errorPlantilla }}
+          </v-alert>
+        </v-card-text>
+        <v-card-actions class="pa-4">
+          <v-spacer />
+          <v-btn variant="outlined" color="secondary" class="text-button" :disabled="guardandoPlantilla" @click="dialogPlantilla = false">
+            Cancelar
+          </v-btn>
+          <v-btn color="primary" variant="flat" class="text-button" :loading="guardandoPlantilla" @click="guardarPlantilla">
+            Guardar plantilla
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -668,6 +753,9 @@ function accionesDe(survey) {
   if (hasPermission('surveys.create')) {
     acciones.push({ key: 'duplicar', title: 'Duplicar', icon: 'mdi-content-copy', handler: () => duplicarEncuesta(survey) });
   }
+  if (hasPermission('surveys.create')) {
+    acciones.push({ key: 'plantilla', title: 'Guardar como plantilla', icon: 'mdi-content-save-outline', handler: () => abrirGuardarPlantilla(survey) });
+  }
 
   if (hasPermission('changelogs.view')) {
     acciones.push({ key: 'historial', title: 'Historial de cambios', icon: 'mdi-history', handler: () => abrirHistorial(survey) });
@@ -852,6 +940,51 @@ function formatFecha(fecha) {
 const dialogDistribucion = ref(false);
 const encuestaDistribucion = ref(null);
 const emailsInvitar = ref('');
+// Compartir con la organización
+const incluirSubdependencias = ref(false);
+const resumenOrganizacion = ref(null);
+const cargandoOrganizacion = ref(false);
+const invitandoOrganizacion = ref(false);
+
+async function cargarResumenOrganizacion() {
+  if (!encuestaDistribucion.value) return;
+
+  cargandoOrganizacion.value = true;
+  try {
+    const response = await backendApi.get(
+      `/surveys/${encuestaDistribucion.value.id}/organization-members`,
+      { params: { include_children: incluirSubdependencias.value ? 1 : 0 } }
+    );
+    resumenOrganizacion.value = response.data;
+  } catch (e) {
+    resumenOrganizacion.value = null;
+  } finally {
+    cargandoOrganizacion.value = false;
+  }
+}
+
+async function invitarOrganizacion() {
+  invitandoOrganizacion.value = true;
+  try {
+    const response = await backendApi.post(
+      `/surveys/${encuestaDistribucion.value.id}/invite-organization`,
+      { include_children: incluirSubdependencias.value }
+    );
+    alert.success(response.data.message);
+    await Promise.all([
+      cargarParticipantes(encuestaDistribucion.value.id),
+      cargarResumenOrganizacion(),
+    ]);
+  } catch (e) {
+    alert.error(e.response?.data?.message || 'No se pudo invitar a la organización.');
+  } finally {
+    invitandoOrganizacion.value = false;
+  }
+}
+
+// Al activar/desactivar sub-dependencias se recalcula el resumen.
+watch(incluirSubdependencias, cargarResumenOrganizacion);
+
 const invitando = ref(false);
 const enviandoCorreos = ref(false);
 const cargandoParticipantes = ref(false);
@@ -885,6 +1018,54 @@ const qrAdvertencia = computed(() => {
   return '';
 });
 
+// Guardar como plantilla
+const dialogPlantilla = ref(false);
+const guardandoPlantilla = ref(false);
+const errorPlantilla = ref(null);
+const encuestaPlantilla = ref(null);
+const plantillaForm = ref({ name: '', description: '', is_public: false });
+
+function abrirGuardarPlantilla(survey) {
+  encuestaPlantilla.value = survey;
+  plantillaForm.value = {
+    name: survey.title,
+    description: survey.description || '',
+    is_public: false,
+  };
+  errorPlantilla.value = null;
+  dialogPlantilla.value = true;
+}
+
+async function guardarPlantilla() {
+  if (!plantillaForm.value.name.trim()) {
+    errorPlantilla.value = 'Escribe un nombre para la plantilla.';
+    return;
+  }
+
+  guardandoPlantilla.value = true;
+  errorPlantilla.value = null;
+
+  try {
+    const response = await backendApi.post(
+      `/surveys/${encuestaPlantilla.value.id}/save-as-template`,
+      {
+        name: plantillaForm.value.name.trim(),
+        description: plantillaForm.value.description?.trim() || null,
+        is_public: plantillaForm.value.is_public,
+      }
+    );
+    alert.success(response.data.message || 'Plantilla guardada correctamente.');
+    dialogPlantilla.value = false;
+  } catch (e) {
+    errorPlantilla.value =
+      e.response?.data?.message || 'No se pudo guardar la plantilla.';
+  } finally {
+    guardandoPlantilla.value = false;
+  }
+}
+
+
+
 const dialogQrParticipante = ref(false);
 const participanteQr = ref(null);
 const qrParticipanteUrl = ref(null);
@@ -912,7 +1093,10 @@ async function abrirDistribucion(survey) {
   if (survey.type?.name?.toLowerCase().includes('públic')) {
     await cargarQr(survey.id);
   } else {
+    incluirSubdependencias.value = false;
+    resumenOrganizacion.value = null;
     await cargarParticipantes(survey.id);
+    cargarResumenOrganizacion();
   }
 }
 

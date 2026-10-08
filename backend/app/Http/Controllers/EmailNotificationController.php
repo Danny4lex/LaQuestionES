@@ -46,10 +46,16 @@ class EmailNotificationController extends Controller
     {
         $validated = $request->validate([
             'survey_id' => 'required|exists:surveys,id',
+            'limit' => 'nullable|integer|min:1|max:200',
         ]);
+
+        // Se envían en tandas para no agotar el tiempo de ejecución cuando
+        // hay muchas invitaciones (por ejemplo, una organización completa).
+        $tanda = $validated['limit'] ?? 50;
 
         $pending = EmailNotification::where('survey_id', $validated['survey_id'])
             ->where('status', 'pendiente')
+            ->limit($tanda)
             ->get();
 
         $sent = 0;
@@ -71,9 +77,19 @@ class EmailNotificationController extends Controller
             }
         }
 
-        return response()->json([
-            'message' => "$sent notificación(es) enviada(s), $failed fallida(s).",
-        ], 200);
+        $restantes = EmailNotification::where('survey_id', $validated['survey_id'])
+        ->where('status', 'pendiente')
+        ->count();
+
+    $mensaje = "$sent notificación(es) enviada(s), $failed fallida(s).";
+    if ($restantes > 0) {
+        $mensaje .= " Quedan $restantes pendiente(s): vuelve a presionar \"Enviar pendientes\".";
+    }
+
+    return response()->json([
+        'message' => $mensaje,
+        'remaining' => $restantes,
+    ], 200);
     }
 
     // =====================================================================

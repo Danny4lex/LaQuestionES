@@ -54,13 +54,15 @@ onMounted(async () => {
   }
 });
 
-async function submitSurvey({ respondent, answers }) {
+async function submitSurvey({ respondent, anonymous, answers }) {
   submitError.value = null;
   submitting.value = true;
 
   try {
     // Encuesta anónima: no se envía ningún dato personal.
-    const body = respondent ? { ...respondent, answers } : { answers };
+    // Anónimo: no se envía ningún dato personal.
+    const body = { ...(respondent || {}), answers };
+    if (anonymous !== undefined) body.anonymous = anonymous;
     await axios.post(`${baseUrl}/public/surveys/${route.params.id}/submit`, body);
 
     submitSuccess.value = "¡Gracias! Tus respuestas fueron registradas correctamente.";

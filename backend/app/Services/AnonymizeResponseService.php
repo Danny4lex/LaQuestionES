@@ -18,6 +18,22 @@ use Illuminate\Http\Request;
 // =========================================================================
 class AnonymizeResponseService
 {
+
+        // =====================================================================
+    // ¿Este envío debe guardarse como anónimo? El servidor decide según el
+    // modo de la encuesta; el navegador solo aporta la elección del
+    // encuestado cuando el modo es "optional".
+    // =====================================================================
+    public function isAnonymousSubmission(Survey $survey, Request $request): bool
+    {
+        return match ($survey->anonymity_mode) {
+            'anonymous' => true,
+            'optional'  => $request->boolean('anonymous'),
+            default     => false,
+        };
+    }
+
+
     // =====================================================================
     // Resuelve (o crea) el Participant correspondiente a una respuesta
     // pública.
@@ -29,7 +45,7 @@ class AnonymizeResponseService
     // =====================================================================
     public function resolvePublicParticipant(Survey $survey, Request $request): Participant
     {
-        if ($survey->is_anonymous) {
+        if ($this->isAnonymousSubmission($survey, $request)) {
             return Participant::create([
                 'type' => 'anonimo',
                 'invitation_status' => null,
@@ -77,7 +93,13 @@ class AnonymizeResponseService
     // =====================================================================
     public function alreadyResponded(Survey $survey, Participant $participant, Request $request): bool
     {
-        if ($survey->is_anonymous || $participant->type === 'anonimo') {
+        // Invitados: la invitación de un solo uso ya controla los repetidos
+        // (invitation_status), aunque su respuesta se guarde de forma anónima.
+        if ($participant->type === 'invitado') {
+            return $participant->invitation_status === 'respondido';
+        }
+
+        if ($this->isAnonymousSubmission($survey, $request) || $participant->type === 'anonimo') {
             return SurveyResponse::where('survey_id', $survey->id)
                 ->whereNull('participant_id')
                 ->where('source_ip', $request->ip())

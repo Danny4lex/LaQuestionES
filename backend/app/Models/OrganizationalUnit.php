@@ -66,6 +66,26 @@ class OrganizationalUnit extends Model
         return $this->hasMany(OrganizationalUnit::class, 'parent_id')->with('childrenRecursive');
     }
 
+
+
+        // ==========================================
+    // IDs de una unidad y de TODA su descendencia (sin importar la
+    // profundidad). Se usa para invitar a una organización completa con
+    // sus sub-dependencias. Protegido contra ciclos en la jerarquía.
+    // ==========================================
+    public static function idsWithDescendants(int $rootId): array
+    {
+        $ids = [$rootId];
+        $frontier = [$rootId];
+
+        while (!empty($frontier)) {
+            $hijos = static::whereIn('parent_id', $frontier)->pluck('id')->all();
+            $frontier = array_values(array_diff($hijos, $ids));
+            $ids = array_merge($ids, $frontier);
+        }
+
+        return $ids;
+    }
     // ==========================================
     // RELACIONES INVERSAS
     // ==========================================

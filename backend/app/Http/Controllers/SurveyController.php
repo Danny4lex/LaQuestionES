@@ -37,7 +37,7 @@ class SurveyController extends Controller
         'title'              => 'el título',
         'description'        => 'la descripción',
         'is_single_response' => 'la restricción de respuesta única',
-        'is_anonymous'       => 'el modo anónimo',
+        'anonymity_mode'     => 'la privacidad de los encuestados',
         'survey_category_id' => 'la categoría',
         'type_id'            => 'el tipo de acceso',
         'start_date'         => 'la fecha de inicio',
@@ -106,7 +106,7 @@ class SurveyController extends Controller
             'title'              => 'required|string|max:255',
             'description'        => 'nullable|string',
             'is_single_response' => 'required|boolean',
-            'is_anonymous'       => 'sometimes|boolean',
+            'anonymity_mode'     => 'sometimes|in:identified,optional,anonymous',
             'survey_category_id' => 'required|exists:survey_categories,id',
             'type_id'            => 'required|exists:types,id',
             'status_id'          => 'required|exists:statuses,id',
@@ -157,7 +157,7 @@ class SurveyController extends Controller
     // =====================================================================
     public function show(Request $request, Survey $survey): JsonResponse
     {
-        $isAnonymous = $request->boolean('is_anonymous') || (bool) $survey->is_anonymous;
+        $isAnonymous = $survey->anonymity_mode === 'anonymous';
 
         $anonKey = $isAnonymous ? 'anon' : 'full';
         $cacheKey = "survey_detail_{$survey->id}_{$anonKey}";
@@ -219,7 +219,7 @@ class SurveyController extends Controller
             'title'              => 'sometimes|required|string|max:255',
             'description'        => 'nullable|string',
             'is_single_response' => 'sometimes|required|boolean',
-            'is_anonymous'       => 'sometimes|boolean',
+            'anonymity_mode'     => 'sometimes|in:identified,optional,anonymous',
             'survey_category_id' => 'sometimes|required|exists:survey_categories,id',
             'type_id'            => 'sometimes|required|exists:types,id',
             'start_date'         => 'nullable|date',
