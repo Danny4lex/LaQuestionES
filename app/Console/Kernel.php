@@ -18,7 +18,7 @@ class Kernel extends ConsoleKernel
         // Corre cada hora porque una encuesta puede tener que publicarse
         // el mismo día a una hora específica; diario dejaría hasta 24h
         // de retraso.
-        $schedule->command('surveys:apply-vigencia')->hourly();
+        $schedule->command('surveys:apply-vigencia')->everyMinute();
     }
 
     /**
