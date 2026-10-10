@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Artisan;
 
 class SurveyController extends Controller
 {
@@ -68,6 +69,12 @@ class SurveyController extends Controller
     // =====================================================================
     public function index(Request $request): JsonResponse
     {
+
+                // Respaldo por si el programador de tareas no está corriendo:
+        // aplica la vigencia como máximo una vez por minuto.
+        if (Cache::add('survey_vigencia_check', true, 60)) {
+            Artisan::call('surveys:apply-vigencia');
+        }
         $query = Survey::with([
                 'category:id,name',
                 'type:id,name',
@@ -103,8 +110,8 @@ class SurveyController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'title'              => 'required|string|max:255',
-            'description'        => 'nullable|string',
+            'title'       => 'required|string|max:300',
+            'description' => 'nullable|string|max:800',
             'is_single_response' => 'required|boolean',
             'anonymity_mode'     => 'sometimes|in:identified,optional,anonymous',
             'survey_category_id' => 'required|exists:survey_categories,id',
@@ -112,8 +119,8 @@ class SurveyController extends Controller
             'status_id'          => 'required|exists:statuses,id',
             'dependency_id'      => 'nullable|exists:organizational_units,id',
             'template_id'        => 'nullable|exists:templates,id',
-            'start_date'         => 'nullable|date',
-            'end_date'           => 'nullable|date|after_or_equal:start_date',
+            'start_date'  => 'nullable|date|after_or_equal:today',
+            'end_date'    => 'nullable|date|after_or_equal:start_date',
         ]);
 
         $puedeElegirDependencia = $request->user()?->role?->hasPermission('surveys.viewAll') ?? false;
@@ -216,15 +223,22 @@ class SurveyController extends Controller
         }
 
         $validated = $request->validate([
-            'title'              => 'sometimes|required|string|max:255',
-            'description'        => 'nullable|string',
+            'title'       => 'sometimes|required|string|max:300',
+            'description' => 'nullable|string|max:800',
             'is_single_response' => 'sometimes|required|boolean',
             'anonymity_mode'     => 'sometimes|in:identified,optional,anonymous',
             'survey_category_id' => 'sometimes|required|exists:survey_categories,id',
             'type_id'            => 'sometimes|required|exists:types,id',
-            'start_date'         => 'nullable|date',
-            'end_date'           => 'nullable|date|after_or_equal:start_date',
-        ]);
+            'start_date'  => ['nullable', 'date', function ($attr, $value, $fail) use ($survey) {
+                if (!$value) return;
+                // Si la fecha no cambió, no se vuelve a validar (encuestas ya iniciadas).
+                if ($survey->start_date && \Carbon\Carbon::parse($value)->equalTo($survey->start_date)) return;
+                if (\Carbon\Carbon::parse($value)->lt(now()->startOfDay())) {
+                    $fail('La fecha de inicio no puede ser anterior a hoy.');
+                }
+            }],
+            'end_date'    => 'nullable|date|after_or_equal:start_date',
+            ]);
 
         $survey->update($validated);
 
@@ -276,7 +290,20 @@ class SurveyController extends Controller
                 'message' => "No tienes permiso para pasar la encuesta de \"{$estadoAnterior}\" a \"{$estadoNuevoObj?->name}\"."
             ], 403);
         }
-
+            // Si se publica ANTES de su hora de inicio, queda "Programada".
+            // Va después del chequeo de permisos para no alterar la habilidad requerida.
+            if (
+                $estadoNuevoObj?->slug === 'published'
+                && in_array($estadoAnteriorObj?->slug, ['approved', 'needs_correction'], true)
+                && $survey->start_date
+                && $survey->start_date->gt(now())
+            ) {
+                $programada = \App\Models\Status::where('slug', 'scheduled')->first();
+                if ($programada) {
+                    $estadoNuevoObj = $programada;
+                    $validated['status_id'] = $programada->id;
+                }
+            }
         try {
             $survey = $this->statusFlowService->transition($survey, $validated['status_id']);
         } catch (InvalidArgumentException $e) {

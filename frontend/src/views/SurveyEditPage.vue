@@ -1,7 +1,31 @@
 <template>
-  <div>
-    <h3 class="text-page-title mt-8">Editar encuesta</h3>
-    <p class="text-subtitle mb-4">Modifica los datos de la encuesta</p>
+  <div class="survey-edit-page">
+    <!-- ================= Hero Header ================= -->
+    <div class="hero">
+      <div class="hero__bg" />
+      <div class="hero__content">
+        <div class="hero__text">
+          <div class="hero__eyebrow">{{ esEdicion ? 'Edición' : 'Creación' }}</div>
+          <h1 class="hero__title">{{ esEdicion ? 'Editar encuesta' : 'Nueva encuesta' }}</h1>
+          <p class="hero__sub">
+            {{ esEdicion ? 'Modifica los datos de la encuesta' : 'Completa los datos para crear la encuesta' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+       <!-- Guardando -->
+       <v-overlay
+      v-model="guardando"
+      persistent
+      scrim="#063456"
+      class="align-center justify-center"
+    >
+      <div class="text-center text-white">
+        <v-progress-circular indeterminate size="48" color="white" />
+        <p class="mt-4 text-body-1">Guardando encuesta...</p>
+      </div>
+    </v-overlay>
 
     <!-- Cargando -->
     <div v-if="loading" class="text-center py-8">
@@ -34,6 +58,8 @@
             variant="outlined"
             prepend-icon="mdi-content-save"
             class="text-button"
+            :loading="guardando"
+            :disabled="guardando"
             @click="guardarEncuesta"
           >
             Guardar
@@ -64,8 +90,6 @@
             </v-btn>
         </v-col>
 
-        <!-- Encuestador: solo puede publicar una vez que el Administrador
-             ya aprobó la encuesta (estadoActualSlug === 'approved'). -->
         <v-col v-if="estadoActualSlug === 'approved' && hasPermission('status.publish')" cols="12" sm="auto">
           <v-btn
             color="success"
@@ -78,7 +102,6 @@
           </v-btn>
         </v-col>
 
-        <!-- Administrador: modera las encuestas que llegaron a "En revisión" -->
         <template v-if="estadoActualSlug === 'review' && hasPermission('status.moderate')">
           <v-col cols="12" sm="auto">
             <v-btn
@@ -115,8 +138,6 @@
           </v-col>
         </template>
 
-<!-- Administrador: con correcciones solicitadas, la encuesta sigue
-     pudiendo aprobarse o publicarse sin esperar un nuevo ciclo. -->
      <template v-if="estadoActualSlug === 'needs_correction' && hasPermission('status.moderate')">
   <v-col cols="12" sm="auto">
     <v-btn
@@ -142,10 +163,6 @@
   </v-col>
 </template>
 
-        <!-- Administrador: puede seguir moviendo el ESTADO de la encuesta
-             aunque ya no pueda tocar su contenido (Publicada/Cerrada
-             incluidas) — el bloqueo de "campos-bloqueados" solo aplica al
-             formulario de abajo, nunca a estos botones. -->
         <template v-if="hasPermission('status.moderate')">
           <v-col v-if="estadoActualSlug === 'scheduled'" cols="12" sm="auto">
             <v-btn color="success" variant="flat" prepend-icon="mdi-rocket-launch-outline" class="text-button"
@@ -203,6 +220,7 @@
               <v-text-field
                 v-model="titulo"
                 label="Título"
+                maxlength="300"
                 variant="outlined"
                 density="compact"
                 hide-details
@@ -230,6 +248,7 @@
               <v-textarea
                 v-model="descripcion"
                 label="Descripción"
+                maxlength="800"
                 variant="outlined"
                 density="compact"
                 rows="2"
@@ -254,29 +273,44 @@
               <ToggleSwitch v-model="unicaRespuesta" label="Permitir una sola respuesta por persona" />
             </v-col>
 
-            <v-col cols="12" md="4">
-              <v-text-field
-                v-model="fechaInicio"
-                label="Fecha y hora de inicio"
-                type="datetime-local"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="input-field"
-              />
-            </v-col>
+            <v-col cols="12">
+                <div class="d-flex flex-wrap" style="gap: 48px;">
 
-            <v-col cols="12" md="4">
-              <v-text-field
-                v-model="fechaFin"
-                label="Fecha y hora de fin"
-                type="datetime-local"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="input-field"
-              />
-            </v-col>
+                  <!-- Inicio -->
+                  <div class="d-flex flex-wrap align-center" style="gap: 8px;">
+                    <v-text-field
+                      v-model="inicioDia"
+                      label="Fecha de inicio"
+                      type="date"
+                      :min="hoy"
+                      variant="outlined"
+
+                      density="compact"
+                      hide-details
+                      class="input-field"
+                      style="width: 190px;"
+                    />
+                    <TimeSelect12h v-model="inicioHora" />
+                  </div>
+
+                  <!-- Cierre -->
+                  <div class="d-flex flex-wrap align-center" style="gap: 8px;">
+                    <v-text-field
+                      v-model="finDia"
+                      label="Fecha de fin"
+                      type="date"
+                      :min="inicioDia || hoy"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      class="input-field"
+                      style="width: 190px;"
+                    />
+                    <TimeSelect12h v-model="finHora" />
+                  </div>
+
+                </div>
+              </v-col>
 
             <v-col cols="12" md="4">
               <v-select
@@ -388,6 +422,7 @@
               <v-text-field
                 v-model="seccion.description"
                 placeholder="Descripción"
+                maxlength="800"
                 variant="outlined"
                 density="compact"
                 hide-details
@@ -815,6 +850,7 @@ import useAuth from '@/composables/useAuth';
 import useAlert from '@/composables/useAlert';
 import useConfirm from '@/composables/useConfirm';
 import ToggleSwitch from '@/components/ToggleSwitch.vue';
+import TimeSelect12h from '@/components/TimeSelect12h.vue';
 
 const { hasPermission } = useAuth();
 const { alert } = useAlert();
@@ -824,6 +860,7 @@ const route = useRoute();
 const router = useRouter();
 
 const loading = ref(true);
+const guardando = ref(false);
 const errorMsg = ref(null);
 const previewDialog = ref(false);
 const formRef = ref(null);
@@ -844,10 +881,6 @@ function formatearFechaComentario(fecha) {
   return new Date(fecha).toLocaleString('es-SV', { dateStyle: 'short', timeStyle: 'short' });
 }
 
-// El "papelito" distingue visualmente si el comentario lo dejó el
-// Administrador (quien pide la corrección) o el Encuestador (quien
-// responde) — por nombre de rol, ya que es lo único que trae el
-// endpoint de comentarios.
 function esAdministrador(comentario) {
   return comentario.user?.role?.name?.toLowerCase().includes('administrador');
 }
@@ -915,15 +948,10 @@ const estadoActualSlug = computed(() => {
   return estados.value.find(e => e.id === estadoId.value)?.slug ?? null;
 });
 
-// Espejo de SurveyStatusFlowService::EDITABLE_STATUSES en el backend.
-// Una encuesta nueva (aún sin estado_id, esEdicion=false) siempre es
-// editable. El backend es quien realmente hace cumplir esta regla — esto
-// es solo para no mostrar controles que el usuario no podrá usar.
-// NOTA: el CAMBIO DE ESTADO (Aprobar/Rechazar/Publicar/Pausar/etc.) no
-// depende de esta lista — esos botones viven fuera del bloque
-// "campos-bloqueados" y el Administrador puede usarlos en cualquier
-// estado válido según el flujo (ver botones más abajo en el template).
 const ESTADOS_EDITABLES = ['draft', 'review', 'approved', 'rejected', 'needs_correction'];
+const hoy = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+  .toISOString().slice(0, 10);
+const inicioOriginal = ref(null);
 const esEditable = computed(() => {
   if (!esEdicion.value) return true;
   return ESTADOS_EDITABLES.includes(estadoActualSlug.value);
@@ -939,7 +967,6 @@ const opcionesAnonimato = [
   { title: 'El encuestado decide si es anónimo', value: 'optional' },
   { title: 'Todos los encuestados son anónimos', value: 'anonymous' },
 ];
-// Aviso cuando "una sola respuesta" no se puede garantizar del todo.
 const avisoAnonimato = computed(() =>
   modoAnonimato.value !== 'identified' && unicaRespuesta.value
     ? 'Con respuestas anónimas, "una sola respuesta" se controla solo por IP y puede no ser exacto.'
@@ -949,8 +976,10 @@ const unicaRespuesta = ref(false);
 const categoriaId = ref(null);
 const estadoId = ref(null);
 const dependenciaId = ref(null);
-const fechaInicio = ref(null);
-const fechaFin = ref(null);
+const inicioDia = ref(null);
+const inicioHora = ref(null);
+const finDia = ref(null);
+const finHora = ref(null);
 
 // Catálogos reales
 const tipos = ref([]);
@@ -1081,19 +1110,12 @@ async function eliminarSeccion(sIndex) {
   secciones.splice(sIndex, 1);
 }
 
-// Límite de caracteres por defecto según el tipo de texto elegido — el
-// usuario puede ajustarlo libremente en el campo numérico del editor.
-// El umbral de 200 es el mismo que usan las pantallas de respuesta para
-// decidir si renderizan un campo de una línea o un textarea.
 const UMBRAL_TEXTO_LARGO = 200;
 const MAX_LENGTH_DEFAULT = {
   'Texto corto': 150,
   'Texto largo': 1000,
 };
 
-// El backend solo guarda type="texto" para ambos casos (no distingue
-// corto/largo como columna aparte) — se infiere la etiqueta a mostrar a
-// partir de max_length, usando el mismo umbral que el resto del sistema.
 function etiquetaTipoTexto(maxLength) {
   return maxLength && maxLength > UMBRAL_TEXTO_LARGO ? 'Texto largo' : 'Texto corto';
 }
@@ -1153,7 +1175,6 @@ function eliminarOpcion(sIndex, pIndex, oIndex) {
 }
 
 async function cargarCatalogos() {
-  // 1. Si ya los tenemos guardados en la memoria del navegador, usarlos al instante (0 ms)
   const cachedTipos = localStorage.getItem('cat_tipos');
   const cachedCat = localStorage.getItem('cat_categorias');
   const cachedEst = localStorage.getItem('cat_estados');
@@ -1167,7 +1188,6 @@ async function cargarCatalogos() {
     return;
   }
 
-  // 2. Si es la primera vez que se entra, pedir de a uno para no ahogar a PHP
   try {
     if (!tipos.value.length) {
       const res = await backendApi.get('/types');
@@ -1241,7 +1261,6 @@ async function cargarEncuesta(id) {
   const response = await backendApi.get(`/surveys/${id}`);
   const survey = response.data;
 
-  // Asignación inmediata de cabecera
   titulo.value = survey.title;
   descripcion.value = survey.description || '';
   tipoId.value = survey.type_id;
@@ -1250,101 +1269,72 @@ async function cargarEncuesta(id) {
   categoriaId.value = survey.survey_category_id;
   estadoId.value = survey.status_id;
   dependenciaId.value = survey.dependency_id;
-  fechaInicio.value = aInputFechaHora(survey.start_date);
-fechaFin.value = aInputFechaHora(survey.end_date);
+  const ini = separarFechaHora(survey.start_date);
+  inicioDia.value = ini.dia;
+  inicioOriginal.value = ini.dia;
+  inicioHora.value = ini.hora;
 
-  // Carga reactiva de la estructura
+  const fin = separarFechaHora(survey.end_date);
+  finDia.value = fin.dia;
+  finHora.value = fin.hora;
+
   cargarEstructura(survey);
 }
 
-
-
-// El backend entrega la fecha en formato ISO (UTC); el campo necesita
-// "AAAA-MM-DDTHH:mm" en hora local.
-function aInputFechaHora(iso) {
-  if (!iso) return null;
+function separarFechaHora(iso) {
+  if (!iso) return { dia: null, hora: null };
   const d = new Date(iso);
   const p = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  return {
+    dia: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+    hora: `${p(d.getHours())}:${p(d.getMinutes())}`,
+  };
 }
+
+function unirFechaHora(dia, hora, horaPorDefecto) {
+  if (!dia) return null;
+  return `${dia} ${hora || horaPorDefecto}`;
+}
+
 async function syncStructure(surveyId) {
-  for (const seccion of secciones) {
-    let sectionId = seccion.backendId;
+  const payload = {
+    sections: secciones.map(seccion => ({
+      id: seccion.backendId || null,
+      name: seccion.name,
+      description: seccion.description || null,
+      questions: seccion.questions.map(pregunta => ({
+        id: pregunta.backendId || null,
+        type: labelTypeMap[pregunta.type] || 'texto',
+        statement: pregunta.statement,
+        is_mandatory: !!pregunta.isMandatory,
+        max_length: ['Texto corto', 'Texto largo'].includes(pregunta.type)
+          ? (pregunta.maxLength || null)
+          : null,
+        options: mostrarOpciones(pregunta.type)
+          ? pregunta.options.map(o => ({ id: o.backendId || null, text: o.text }))
+          : [],
+      })),
+    })),
+    deleted: {
+      sections: [...deletedSections.value],
+      questions: [...deletedQuestions.value],
+      options: [...deletedOptions.value],
+    },
+  };
 
-    if (sectionId) {
-      await backendApi.put(`/sections/${sectionId}`, {
-        name: seccion.name,
-        description: seccion.description || null,
+  const { data } = await backendApi.put(`/surveys/${surveyId}/structure`, payload);
+
+  // Asigna los IDs que creó el servidor a lo que se acaba de guardar
+  data.sections.forEach((s, i) => {
+    secciones[i].backendId = s.id;
+    s.questions.forEach((q, j) => {
+      const pregunta = secciones[i].questions[j];
+      pregunta.backendId = q.id;
+      q.options.forEach((optionId, k) => {
+        pregunta.options[k].backendId = optionId;
       });
-    } else {
-      const res = await backendApi.post('/sections', {
-        survey_id: surveyId,
-        name: seccion.name,
-        description: seccion.description || null,
-      });
-      sectionId = res.data.id;
-      seccion.backendId = sectionId;
-    }
-
-    for (const pregunta of seccion.questions) {
-      let questionId = pregunta.backendId;
-      // Solo tiene sentido para texto libre; para el resto de tipos se
-      // manda null explícito (por si el usuario cambió el tipo después
-      // de haber tenido un límite configurado).
-      const maxLengthPayload = ['Texto corto', 'Texto largo'].includes(pregunta.type)
-        ? (pregunta.maxLength || null)
-        : null;
-
-      if (questionId) {
-        await backendApi.put(`/questions/${questionId}`, {
-          type: labelTypeMap[pregunta.type] || 'texto',
-          statement: pregunta.statement,
-          is_mandatory: pregunta.isMandatory,
-          max_length: maxLengthPayload,
-        });
-      } else {
-        const res = await backendApi.post('/questions', {
-          section_id: sectionId,
-          template_id: null,
-          type: labelTypeMap[pregunta.type] || 'texto',
-          statement: pregunta.statement,
-          is_mandatory: pregunta.isMandatory,
-          max_length: maxLengthPayload,
-          sort_order: pregunta.sortOrder || (seccion.questions.indexOf(pregunta) + 1),
-        });
-        questionId = res.data.id;
-        pregunta.backendId = questionId;
-      }
-
-      if (mostrarOpciones(pregunta.type)) {
-        for (let oIndex = 0; oIndex < pregunta.options.length; oIndex++) {
-          const opcion = pregunta.options[oIndex];
-          if (opcion.backendId) {
-            await backendApi.put(`/question-options/${opcion.backendId}`, {
-              option_text: opcion.text,
-            });
-          } else {
-            const res = await backendApi.post('/question-options', {
-              question_id: questionId,
-              option_text: opcion.text,
-              sort_order: oIndex + 1,
-            });
-            opcion.backendId = res.data.id;
-          }
-        }
-      }
-    }
-  }
-
-  for (const optionId of deletedOptions.value) {
-    await backendApi.delete(`/question-options/${optionId}`);
-  }
-  for (const questionId of deletedQuestions.value) {
-    await backendApi.delete(`/questions/${questionId}`);
-  }
-  for (const sectionId of deletedSections.value) {
-    await backendApi.delete(`/sections/${sectionId}`);
-  }
+    });
+  });
 
   deletedOptions.value = [];
   deletedQuestions.value = [];
@@ -1373,11 +1363,6 @@ async function enviarRevision() {
   }
 }
 
-// Genérica: usada por "Publicar" (Encuestador) y "Aprobar"/"Rechazar"
-// (Administrador). El backend valida por su cuenta, con su propia
-// máquina de estados, si la transición es realmente válida y si el rol
-// tiene el permiso puntual para hacerla (ver
-// SurveyController::habilidadRequerida) — esto es solo la UI.
 async function cambiarEstadoPorSlug(slug, mensajeExito) {
   errorMsg.value = null;
 
@@ -1399,14 +1384,23 @@ async function cambiarEstadoPorSlug(slug, mensajeExito) {
 }
 
 async function guardarEncuesta() {
+  if (guardando.value) return;
   errorMsg.value = null;
 
-  // Validación visual con Vuetify
   const { valid } = await formRef.value.validate();
-  if (!valid) {
-    errorMsg.value = 'Por favor completa los campos obligatorios.';
-    return;
-  }
+      if (!valid) {
+        errorMsg.value = 'Por favor completa los campos obligatorios.';
+        return;
+      }
+
+      if (inicioDia.value && inicioDia.value < hoy && inicioDia.value !== inicioOriginal.value) {
+      errorMsg.value = 'La fecha de inicio no puede ser anterior a hoy.';
+      return;
+    }
+    if (inicioDia.value && finDia.value && finDia.value < inicioDia.value) {
+      errorMsg.value = 'La fecha de fin no puede ser anterior a la de inicio.';
+      return;
+    }
 
   const payload = {
     title: titulo.value,
@@ -1415,15 +1409,15 @@ async function guardarEncuesta() {
     anonymity_mode: modoAnonimato.value,
     survey_category_id: categoriaId.value,
     type_id: tipoId.value,
-    start_date: fechaInicio.value || null,
-    end_date: fechaFin.value || null,
+    start_date: unirFechaHora(inicioDia.value, inicioHora.value, '00:00'),
+    end_date: unirFechaHora(finDia.value, finHora.value, '23:59'),
   };
 
   if (!esEdicion.value) {
     payload.status_id = estadoId.value;
     payload.dependency_id = dependenciaId.value;
   }
-
+  guardando.value = true;
   try {
     if (esEdicion.value) {
       const id = route.params.id;
@@ -1437,6 +1431,8 @@ async function guardarEncuesta() {
     }
   } catch (e) {
     errorMsg.value = e.response?.data?.message || 'No se pudo guardar la encuesta.';
+  } finally {
+    guardando.value = false;
   }
 }
 
@@ -1448,12 +1444,8 @@ onMounted(async () => {
   try {
     if (esEdicion.value) {
       const surveyId = route.params.id;
-
-      // 1. Cargar la encuesta e inmediatamente quitar la pantalla de carga ("loading")
       await cargarEncuesta(surveyId);
       loading.value = false;
-
-      // 2. Cargar los catálogos en segundo plano sin bloquear la UI
       cargarCatalogos();
     } else {
       await cargarCatalogos();
@@ -1468,24 +1460,81 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.survey-edit-page {
+  padding-bottom: 24px;
+}
+
+/* ============================================= */
+/* HERO HEADER — estilo “boletín” azul oscuro    */
+/* ============================================= */
+.hero {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 32px 0 20px;
+  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  color: #ffffff;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.10), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(255, 255, 255, 0.06), transparent 40%);
+  pointer-events: none;
+}
+
+.hero__content {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 28px 28px 24px;
+}
+
+.hero__text { min-width: 0; }
+
+.hero__eyebrow {
+  font-family: Poppins;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+
+.hero__title {
+  font-family: Poppins;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+}
+
+.hero__sub {
+  font-size: 12px;
+  font-weight: 300;
+  opacity: 0.85;
+  margin: 0;
+  line-height: 1.4;
+}
+
 .section-card {
   background-color: #ffffff !important;
 }
 
-/* Encuestas no editables (ej. Publicada): se ve el contenido pero no se
-   puede interactuar con él, sin tener que deshabilitar campo por campo.
-   El backend es quien realmente hace cumplir la regla (ver
-   SurveyController::update, SectionController, QuestionController);
-   esto es solo para que la UI no invite a hacer algo que será rechazado. */
 .campos-bloqueados {
   pointer-events: none;
   opacity: 0.6;
   user-select: none;
 }
 
-/* Excepción: los comentarios de corrección deben poder verse/agregarse
-   incluso cuando la encuesta NO es editable — de hecho es justo en
-   "En revisión" (no editable) cuando el Administrador más los necesita. */
 .campos-bloqueados .permite-interaccion {
   pointer-events: auto;
   opacity: 1;
@@ -1493,8 +1542,6 @@ onMounted(async () => {
 
 /* =============================================
    TARJETAS DE COMENTARIOS DEL "PAPELITO"
-   Todas las reglas usan !important y valores en píxeles para que no
-   las pise ninguna clase utilitaria de Vuetify ni estilos heredados.
 ============================================= */
 .comentario-card {
   background-color: #FAFAFA;
@@ -1513,20 +1560,16 @@ onMounted(async () => {
   border-left-color: #2D52A7;
 }
 
-/* Círculo de iniciales | nombre y comentario */
 .comentario-fila {
   display: flex;
   align-items: flex-start;
   gap: 9px !important;
 }
 
-/* El encabezado mide más que el círculo (32px), así el comentario
-   empieza debajo de él, no a su altura. */
 .comentario-header {
   min-height: 33px !important;
 }
 
-/* Nombre y cargo con espacio entre ellos */
 .comentario-nombre {
   display: inline-flex;
   align-items: center;
@@ -1546,7 +1589,6 @@ onMounted(async () => {
 :deep(.v-field) {
   background-color: #E8F0F8 !important;
   border-radius: 4px !important;
-  
 }
 
 :deep(.v-field--variant-outlined .v-field__outline) {
@@ -1800,5 +1842,17 @@ onMounted(async () => {
   font-size: 0.75rem;
   color: #64748B;
   margin: 0;
+}
+
+/* ============================================= */
+/* RESPONSIVE                                     */
+/* ============================================= */
+@media (max-width: 600px) {
+  .hero__content {
+    padding: 22px 20px 20px;
+  }
+  .hero__title {
+    font-size: 24px;
+  }
 }
 </style>
