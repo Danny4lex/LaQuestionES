@@ -7,18 +7,31 @@
 @section('content')
     @php
         $slug = $survey->status->slug ?? 'draft';
-        $badge = in_array($slug, ['published', 'scheduled', 'closed'], true) ? 'badge-' . $slug : 'badge-draft';
+        $badge = in_array($slug, ['published', 'scheduled', 'closed'], true)
+            ? 'badge-' . $slug
+            : 'badge-draft';
         $fmt = fn($d) => $d ? $d->format('d/m/Y') : '—';
     @endphp
 
     {{-- Indicadores principales --}}
     <table class="cards">
         <tr>
-            <td><div class="card-value">{{ $results['respondents'] }}</div><div class="card-label">Encuestados</div></td>
-            <td><div class="card-value">{{ $results['answers'] }}</div><div class="card-label">Respuestas registradas</div></td>
-            <td><div class="card-value">{{ $results['completion_rate'] }}%</div><div class="card-label">Tasa de finalización</div></td>
             <td>
-                <div class="card-value">{{ $results['satisfaction_avg'] !== null ? $results['satisfaction_avg'] . ' / 5' : '—' }}</div>
+                <div class="card-value">{{ $results['respondents'] }}</div>
+                <div class="card-label">Encuestados</div>
+            </td>
+            <td>
+                <div class="card-value">{{ $results['answers'] }}</div>
+                <div class="card-label">Respuestas registradas</div>
+            </td>
+            <td>
+                <div class="card-value">{{ $results['completion_rate'] }}%</div>
+                <div class="card-label">Tasa de finalización</div>
+            </td>
+            <td>
+                <div class="card-value">
+                    {{ $results['satisfaction_avg'] !== null ? $results['satisfaction_avg'] . ' / 5' : '—' }}
+                </div>
                 <div class="card-label">Satisfacción promedio</div>
             </td>
         </tr>
@@ -33,26 +46,39 @@
         </tr>
         <tr>
             <td class="k">Tipo de acceso</td><td class="v">{{ $survey->type->name ?? '—' }}</td>
-            <td class="k">Estado</td><td class="v"><span class="badge {{ $badge }}">{{ $survey->status->name ?? '—' }}</span></td>
+            <td class="k">Estado</td>
+            <td class="v"><span class="badge {{ $badge }}">{{ $survey->status->name ?? '—' }}</span></td>
         </tr>
         <tr>
-            <td class="k">Vigencia</td><td class="v">{{ $fmt($survey->start_date) }} al {{ $fmt($survey->end_date) }}</td>
-            <td class="k">Modalidad</td><td class="v">{{ $survey->is_anonymous ? 'Anónima' : 'Identificada' }}</td>
+            <td class="k">Vigencia</td>
+            <td class="v">{{ $fmt($survey->start_date) }} al {{ $fmt($survey->end_date) }}</td>
+            <td class="k">Modalidad</td>
+            <td class="v">{{ $survey->is_anonymous ? 'Anónima' : 'Identificada' }}</td>
         </tr>
     </table>
+
     @if ($survey->description)
-        <p class="muted" style="margin-top:6px;">{{ $survey->description }}</p>
+        <p class="muted" style="margin-top:8px; font-size:9px;">{{ $survey->description }}</p>
     @endif
 
     {{-- Resultados por pregunta --}}
     <h2>Resultados por pregunta</h2>
     @forelse ($results['questions'] as $q)
         <div class="question">
-            <div class="q-head"><span class="q-num">{{ $q['number'] }}.</span> {{ $q['statement'] }}@if ($q['mandatory']) <span style="color:#E42716;">*</span>@endif</div>
-            <div class="q-meta">{{ $q['section'] }} · {{ $q['type_label'] }} · {{ $q['total'] }} {{ $q['total'] === 1 ? 'respuesta' : 'respuestas' }}</div>
+            <div class="q-head">
+                <span class="q-num">{{ $q['number'] }}.</span> {{ $q['statement'] }}
+                @if ($q['mandatory']) <span style="color:#E42716;">*</span>@endif
+            </div>
+            <div class="q-meta">
+                {{ $q['section'] }} · {{ $q['type_label'] }} ·
+                {{ $q['total'] }} {{ $q['total'] === 1 ? 'respuesta' : 'respuestas' }}
+            </div>
 
             @if ($q['type'] === 'escala' && $q['total'] > 0)
-                <p class="avg">{{ $q['average'] }} <span class="muted" style="font-size:9px; font-weight:normal;">promedio (escala 1-5)</span></p>
+                <p class="avg">
+                    {{ $q['average'] }}
+                    <span>promedio (escala 1-5)</span>
+                </p>
             @endif
 
             @if (isset($q['bars']) && $q['total'] > 0)
@@ -61,14 +87,16 @@
                         <tr>
                             <td class="bar-label">{{ $b['label'] }}</td>
                             <td class="bar-track">
-                                <div class="track"><div class="fill" style="width: {{ max(0, min(100, $b['pct'])) * 2.1 }}px;"></div></div>
+                                <div class="track">
+                                    <div class="fill" style="width: {{ max(0, min(100, $b['pct'])) * 2.1 }}px;"></div>
+                                </div>
                             </td>
                             <td class="bar-value">{{ $b['count'] }} ({{ $b['pct'] }}%)</td>
                         </tr>
                     @endforeach
                 </table>
             @elseif (isset($q['samples']) && count($q['samples']))
-                <p class="muted" style="font-size:8px; margin-bottom:3px;">Últimas respuestas:</p>
+                <p class="muted" style="font-size:8px; margin-bottom:4px;">Últimas respuestas:</p>
                 @foreach ($q['samples'] as $texto)
                     <div class="quote">{{ $texto }}</div>
                 @endforeach
@@ -110,7 +138,10 @@
                             @endif
                         </td>
                         @unless ($survey->is_anonymous)
-                            <td>{{ $response->participant->name ?? ($response->participant->email ?? 'Anónimo') }}</td>
+                            <td>
+                                {{ $response->participant->name
+                                    ?? ($response->participant->email ?? 'Anónimo') }}
+                            </td>
                         @endunless
                         <td>{{ optional($response->submitted_at)->format('d/m/Y H:i') }}</td>
                     </tr>

@@ -61,7 +61,7 @@ class TemplateController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:800',
             'is_public' => 'required|boolean',
         ]);
 
@@ -98,7 +98,7 @@ class TemplateController extends Controller
 
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:800',
             'is_public'   => 'required|boolean',
         ]);
 
@@ -173,7 +173,7 @@ class TemplateController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:800',
             'is_public' => 'sometimes|required|boolean',
         ]);
 
@@ -201,7 +201,7 @@ class TemplateController extends Controller
             'type_id'            => 'required|exists:types,id',
             'status_id'          => 'required|exists:statuses,id',
             'dependency_id'     => 'required|exists:organizational_units,id',
-            'start_date'        => 'nullable|date',
+            'start_date' => 'nullable|date|after_or_equal:today',
             'end_date'          => 'nullable|date|after_or_equal:start_date',
         ]);
 

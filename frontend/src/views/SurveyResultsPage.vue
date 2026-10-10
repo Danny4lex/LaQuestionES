@@ -1,46 +1,50 @@
 <template>
-  <div>
-    <!-- Encabezado -->
-    <v-row class="align-center mt-8 mb-4">
-      <v-col cols="auto">
-        <h3 class="text-page-title">Resultados de encuesta</h3><br>
-        <p class="text-subtitle mb-0">{{ survey?.title }}</p>
-      </v-col>
-      <v-spacer />
-      <v-col cols="12" sm="auto" class="d-flex flex-wrap gap-2">
-        <v-btn
-          color="secondary"
-          variant="outlined"
-          prepend-icon="mdi-file-excel-outline"
-          class="text-button"
-          :loading="exportandoExcel"
-          :disabled="loading || !!error"
-          @click="exportarExcel"
-        >
-          Exportar Excel
-        </v-btn>
-        <v-btn
-          color="secondary"
-          variant="outlined"
-          prepend-icon="mdi-file-pdf-box"
-          class="text-button"
-          :loading="exportandoPdf"
-          :disabled="loading || !!error"
-          @click="exportarPdf"
-        >
-          Exportar PDF
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="outlined"
-          prepend-icon="mdi-arrow-left"
-          class="text-button"
-          @click="$router.push('/surveys')"
-        >
-          Volver al listado
-        </v-btn>
-      </v-col>
-    </v-row>
+  <div class="results-page">
+    <!-- ================= Hero Header ================= -->
+    <div class="hero">
+      <div class="hero__bg" />
+      <div class="hero__content">
+        <div class="hero__text">
+          <span class="hero__eyebrow">Encuestas</span>
+          <h1 class="text-page-title hero__title">Resultados de encuesta</h1>
+          <p class="text-subtitle hero__subtitle">{{ survey?.title }}</p>
+        </div>
+
+        <div class="hero__actions">
+          <v-btn
+            color="secondary"
+            variant="outlined"
+            prepend-icon="mdi-file-excel-outline"
+            class="text-button"
+            :loading="exportandoExcel"
+            :disabled="loading || !!error"
+            @click="exportarExcel"
+          >
+            Exportar Excel
+          </v-btn>
+          <v-btn
+            color="secondary"
+            variant="outlined"
+            prepend-icon="mdi-file-pdf-box"
+            class="text-button"
+            :loading="exportandoPdf"
+            :disabled="loading || !!error"
+            @click="exportarPdf"
+          >
+            Exportar PDF
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            prepend-icon="mdi-arrow-left"
+            class="text-button"
+            @click="$router.push('/surveys')"
+          >
+            Volver al listado
+          </v-btn>
+        </div>
+      </div>
+    </div>
 
     <!-- Cargando -->
     <LoadingState v-if="loading" message="Cargando resultados" />
@@ -53,7 +57,7 @@
 
     <!-- Contenido -->
     <template v-else>
-      <v-tabs v-model="tabActiva" color="primary" class="mb-4 results-tabs">
+      <v-tabs v-model="tabActiva" color="primary" class="mb-5 results-tabs">
         <v-tab value="boletin" class="text-button">Boletín</v-tab>
         <v-tab value="general" class="text-button">Resultados general</v-tab>
         <v-tab value="por-encuestado" class="text-button" @click="asegurarCargaPorEncuestado">
@@ -63,133 +67,133 @@
 
       <v-window v-model="tabActiva">
         <!-- ============================================================ -->
-        <!-- PESTAÑA: BOLETÍN — resumen condensado, pensado para imprimir  -->
-        <!-- o compartir en una sola vista, sin tener que navegar todas    -->
-        <!-- las tarjetas de la pestaña general.                          -->
+        <!-- PESTAÑA: BOLETÍN                                              -->
         <!-- ============================================================ -->
         <v-window-item value="boletin">
-          <v-card class="rounded-lg boletin-card" variant="flat">
-            <v-card-text class="pa-6">
-              <div class="d-flex justify-space-between align-start mb-4 no-print">
-                <div />
-                <v-btn variant="outlined" color="secondary" size="small" class="text-button" prepend-icon="mdi-printer-outline" @click="imprimirBoletin">
+          <v-card class="boletin-card" variant="flat">
+            <div class="boletin-hero">
+              <div class="boletin-hero__eyebrow">Boletín de resultados</div>
+              <h2 class="boletin-hero__title">{{ survey?.title }}</h2>
+              <p class="boletin-hero__sub">{{ survey?.description }}</p>
+
+              <div class="boletin-hero__meta">
+                <span><v-icon size="14">mdi-domain</v-icon> {{ survey?.department?.name || '—' }}</span>
+                <span><v-icon size="14">mdi-tag-outline</v-icon> {{ survey?.category?.name || '—' }}</span>
+                <span>
+                  <v-icon size="14">mdi-calendar-range</v-icon>
+                  {{ formatearFecha(survey?.start_date) }} — {{ formatearFecha(survey?.end_date) }}
+                </span>
+                <span><v-icon size="14">mdi-information-outline</v-icon> {{ survey?.status?.name || '—' }}</span>
+              </div>
+            </div>
+
+            <v-card-text class="pa-7">
+              <div class="d-flex justify-end mb-5 no-print">
+                <v-btn
+                  variant="outlined"
+                  color="secondary"
+                  size="small"
+                  class="text-button"
+                  prepend-icon="mdi-printer-outline"
+                  @click="imprimirBoletin"
+                >
                   Imprimir boletín
                 </v-btn>
               </div>
 
-              <div class="text-center mb-6">
-                <div class="text-caption text-medium-emphasis text-uppercase">Boletín de resultados</div>
-                <h2 class="text-page-title mb-1">{{ survey?.title }}</h2>
-                <p class="text-body-small text-medium-emphasis mb-0">{{ survey?.description }}</p>
+              <div class="kpi-grid mb-8">
+                <div class="kpi-card kpi-card--primary">
+                  <div class="kpi-card__icon">
+                    <v-icon size="20">mdi-account-group-outline</v-icon>
+                  </div>
+                  <div class="kpi-card__value">{{ metrics.total_responses }}</div>
+                  <div class="kpi-card__label">Respuestas totales</div>
+                </div>
+                <div class="kpi-card kpi-card--success">
+                  <div class="kpi-card__icon">
+                    <v-icon size="20">mdi-check-circle-outline</v-icon>
+                  </div>
+                  <div class="kpi-card__value">{{ metrics.completed_responses }}</div>
+                  <div class="kpi-card__label">Respuestas completas</div>
+                </div>
+                <div class="kpi-card kpi-card--accent">
+                  <div class="kpi-card__icon">
+                    <v-icon size="20">mdi-percent-outline</v-icon>
+                  </div>
+                  <div class="kpi-card__value">{{ metrics.completion_rate }}%</div>
+                  <div class="kpi-card__label">Tasa de finalización</div>
+                </div>
               </div>
 
-              <v-row dense class="mb-5">
-                <v-col cols="6" sm="3">
-                  <div class="summary-label">Dependencia</div>
-                  <div class="text-body-small">{{ survey?.department?.name || '—' }}</div>
-                </v-col>
-                <v-col cols="6" sm="3">
-                  <div class="summary-label">Categoría</div>
-                  <div class="text-body-small">{{ survey?.category?.name || '—' }}</div>
-                </v-col>
-                <v-col cols="6" sm="3">
-                  <div class="summary-label">Vigencia</div>
-                  <div class="text-body-small">{{ formatearFecha(survey?.start_date) }} — {{ formatearFecha(survey?.end_date) }}</div>
-                </v-col>
-                <v-col cols="6" sm="3">
-                  <div class="summary-label">Estado</div>
-                  <div class="text-body-small">{{ survey?.status?.name || '—' }}</div>
-                </v-col>
-              </v-row>
-
-              <v-row dense class="mb-6 text-center">
-                <v-col cols="4">
-                  <div class="summary-value">{{ metrics.total_responses }}</div>
-                  <div class="summary-label">Respuestas totales</div>
-                </v-col>
-                <v-col cols="4">
-                  <div class="summary-value">{{ metrics.completed_responses }}</div>
-                  <div class="summary-label">Respuestas completas</div>
-                </v-col>
-                <v-col cols="4">
-                  <div class="summary-value">{{ metrics.completion_rate }}%</div>
-                  <div class="summary-label">Tasa de finalización</div>
-                </v-col>
-              </v-row>
-
               <template v-if="satisfaction.length">
-                <div class="text-subtitle mb-2">Indicadores de satisfacción</div>
-                <div v-for="indicator in satisfaction" :key="indicator.question_id" class="mb-3">
-                  <div class="d-flex align-center justify-space-between mb-1">
+                <div class="section-title">Indicadores de satisfacción</div>
+                <div v-for="indicator in satisfaction" :key="indicator.question_id" class="mb-4">
+                  <div class="d-flex align-center justify-space-between mb-2">
                     <p class="text-body-small mb-0">{{ indicator.statement }}</p>
                     <span class="summary-value">{{ indicator.average_score ?? '—' }} / 5</span>
                   </div>
-                  <v-progress-linear :model-value="((indicator.average_score || 0) / 5) * 100" color="#4880FF" height="6" rounded bg-color="#E8F0F8" />
+                  <v-progress-linear
+                    :model-value="((indicator.average_score || 0) / 5) * 100"
+                    color="#4880FF"
+                    height="6"
+                    rounded
+                    bg-color="#E8F0F8"
+                  />
                 </div>
-                <v-divider class="my-4" />
+                <v-divider class="my-6" />
               </template>
 
-              <div class="text-subtitle mb-2">Resumen por pregunta</div>
-              <div v-for="(resumen, index) in resumenCompacto" :key="resumen.id" class="d-flex justify-space-between py-2 boletin-fila">
-                <span class="text-body-small">{{ index + 1 }}. {{ resumen.statement }}</span>
-                <span class="text-body-small text-medium-emphasis text-right ms-3">{{ resumen.texto }}</span>
+              <div class="section-title">Resumen por pregunta</div>
+              <div
+                v-for="(resumen, index) in resumenCompacto"
+                :key="resumen.id"
+                class="boletin-fila d-flex justify-space-between py-3"
+              >
+                <span class="text-body-small boletin-fila__q">
+                  {{ index + 1 }}. {{ resumen.statement }}
+                </span>
+                <span class="text-body-small text-medium-emphasis text-right ms-3">
+                  {{ resumen.texto }}
+                </span>
               </div>
             </v-card-text>
           </v-card>
         </v-window-item>
 
         <!-- ============================================================ -->
-        <!-- PESTAÑA: RESULTADOS GENERAL — el detalle que ya existía       -->
+        <!-- PESTAÑA: RESULTADOS GENERAL                                   -->
         <!-- ============================================================ -->
         <v-window-item value="general">
-          <!-- Tarjeta de métricas generales -->
-          <v-card class="mb-4 rounded-lg" variant="flat">
-            <v-card-text class="pa-4">
-              <div class="text-subtitle mb-2">Resumen general</div>
-              <v-row dense>
-                <v-col cols="12" sm="4">
-                  <div class="d-flex align-center">
-                    <div class="metric-icon-box">
-                      <v-icon color="#063456" size="24">mdi-account-group-outline</v-icon>
-                    </div>
-                    <div class="ms-3">
-                      <div class="summary-label">Total respuestas</div>
-                      <div class="summary-value">{{ metrics.total_responses }}</div>
-                    </div>
-                  </div>
-                </v-col>
-                <v-col cols="12" sm="4">
-                  <div class="d-flex align-center">
-                    <div class="metric-icon-box">
-                      <v-icon color="#063456" size="24">mdi-check-circle-outline</v-icon>
-                    </div>
-                    <div class="ms-3">
-                      <div class="summary-label">Respuestas completas</div>
-                      <div class="summary-value">{{ metrics.completed_responses }}</div>
-                    </div>
-                  </div>
-                </v-col>
-                <v-col cols="12" sm="4">
-                  <div class="d-flex align-center">
-                    <div class="metric-icon-box">
-                      <v-icon color="#063456" size="24">mdi-percent-outline</v-icon>
-                    </div>
-                    <div class="ms-3">
-                      <div class="summary-label">Tasa de finalización</div>
-                      <div class="summary-value">{{ metrics.completion_rate }}%</div>
-                    </div>
-                  </div>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
+          <div class="section-title">Resumen general</div>
+          <div class="kpi-grid mb-5">
+            <div class="kpi-card kpi-card--primary">
+              <div class="kpi-card__icon">
+                <v-icon size="20">mdi-account-group-outline</v-icon>
+              </div>
+              <div class="kpi-card__value">{{ metrics.total_responses }}</div>
+              <div class="kpi-card__label">Respuestas totales</div>
+            </div>
+            <div class="kpi-card kpi-card--success">
+              <div class="kpi-card__icon">
+                <v-icon size="20">mdi-check-circle-outline</v-icon>
+              </div>
+              <div class="kpi-card__value">{{ metrics.completed_responses }}</div>
+              <div class="kpi-card__label">Respuestas completas</div>
+            </div>
+            <div class="kpi-card kpi-card--accent">
+              <div class="kpi-card__icon">
+                <v-icon size="20">mdi-percent-outline</v-icon>
+              </div>
+              <div class="kpi-card__value">{{ metrics.completion_rate }}%</div>
+              <div class="kpi-card__label">Tasa de finalización</div>
+            </div>
+          </div>
 
-          <!-- Indicadores de satisfacción (promedio de preguntas tipo escala) -->
           <v-card v-if="satisfaction.length" class="mb-4 rounded-lg" variant="flat">
-            <v-card-text class="pa-4">
-              <div class="text-subtitle mb-3">Indicadores de satisfacción</div>
-              <div v-for="indicator in satisfaction" :key="indicator.question_id" class="mb-3">
-                <div class="d-flex align-center justify-space-between mb-1">
+            <v-card-text class="pa-5">
+              <div class="section-title">Indicadores de satisfacción</div>
+              <div v-for="indicator in satisfaction" :key="indicator.question_id" class="mb-4">
+                <div class="d-flex align-center justify-space-between mb-2">
                   <p class="text-body-small mb-0">{{ indicator.statement }}</p>
                   <span class="summary-value">{{ indicator.average_score ?? '—' }} / 5</span>
                 </div>
@@ -207,40 +211,42 @@
             </v-card-text>
           </v-card>
 
-          <!-- Comparar períodos y reporte por dependencia -->
-          <v-row dense class="mb-4">
-            <v-col cols="12" sm="auto">
-              <v-btn variant="outlined" color="secondary" class="text-button" prepend-icon="mdi-calendar-range" @click="dialogComparar = true">
-                Comparar períodos
-              </v-btn>
-            </v-col>
-            <v-col cols="12" sm="auto">
-              <v-btn
-                variant="outlined" color="secondary" class="text-button" prepend-icon="mdi-domain"
-                :loading="cargandoReporteDependencia"
-                @click="abrirReporteDependencia"
-              >
-                Reporte por dependencia
-              </v-btn>
-            </v-col>
-          </v-row>
+          <div class="action-strip mb-4">
+            <v-btn
+              variant="outlined"
+              color="secondary"
+              class="text-button"
+              prepend-icon="mdi-calendar-range"
+              @click="dialogComparar = true"
+            >
+              Comparar períodos
+            </v-btn>
+            <v-btn
+              variant="outlined"
+              color="secondary"
+              class="text-button"
+              prepend-icon="mdi-domain"
+              :loading="cargandoReporteDependencia"
+              @click="abrirReporteDependencia"
+            >
+              Reporte por dependencia
+            </v-btn>
+          </div>
 
-          <!-- Resumen por pregunta -->
           <v-card
             v-for="(question, index) in questionsWithSummary"
             :key="question.id"
             class="mb-3 rounded-lg question-card"
             variant="flat"
           >
-            <v-card-text class="pa-4">
-              <div class="d-flex align-center mb-3">
+            <v-card-text class="pa-5">
+              <div class="question-head">
                 <span class="question-number">{{ index + 1 }}</span>
-                <p class="text-body-small font-weight-medium mb-0 ms-2">
+                <p class="text-body-small font-weight-medium mb-0">
                   {{ question.statement }}
                 </p>
               </div>
 
-              <!-- Escala -->
               <div v-if="question.type === 'escala'" class="mt-2">
                 <div class="d-flex align-center mb-2">
                   <span class="summary-value me-2">{{ question.summary.average }}</span>
@@ -258,7 +264,6 @@
                 </div>
               </div>
 
-              <!-- Sí / No o casilla -->
               <div v-else-if="['si_no', 'casilla'].includes(question.type)">
                 <BarChart
                   :labels="['Sí', 'No']"
@@ -266,7 +271,6 @@
                 />
               </div>
 
-              <!-- Opción única / múltiple -->
               <div v-else-if="['opcion_unica', 'opcion_multiple'].includes(question.type)">
                 <DonutChart
                   :labels="optionLabels(question)"
@@ -274,64 +278,111 @@
                 />
               </div>
 
-              <!-- Texto libre -->
-              <div v-else>
-                <div class="d-flex align-center">
-                  <v-icon class="me-2" color="#4880FF">mdi-text-box-outline</v-icon>
-                  <p class="text-body-small mb-0">
-                    {{ question.summary.total_responses }} respuestas de texto.
-                    Consulte la pestaña "Por encuestado" para revisarlas una a una.
-                  </p>
-                </div>
+              <div v-else class="d-flex align-center">
+                <v-icon class="me-2" color="#4880FF">mdi-text-box-outline</v-icon>
+                <p class="text-body-small mb-0">
+                  {{ question.summary.total_responses }} respuestas de texto.
+                  Consulte la pestaña "Por encuestado" para revisarlas una a una.
+                </p>
               </div>
             </v-card-text>
           </v-card>
         </v-window-item>
 
         <!-- ============================================================ -->
-        <!-- PESTAÑA: POR ENCUESTADO — hoja de respuestas individual,      -->
-        <!-- paginada de 5 en 5 (ver ReportController::byParticipant).    -->
+        <!-- PESTAÑA: POR ENCUESTADO                                       -->
         <!-- ============================================================ -->
         <v-window-item value="por-encuestado">
           <LoadingState v-if="cargandoPorEncuestado" message="Cargando resultados" />
 
-          <div v-else-if="!encuestados.length" class="text-center text-medium-emphasis py-8">
-            Todavía no hay respuestas registradas para esta encuesta.
+          <div v-else-if="!encuestados.length" class="empty-respondents">
+            <v-icon size="42" color="#B7C2D0">mdi-account-off-outline</v-icon>
+            <p class="text-body-small text-medium-emphasis mt-3 mb-0">
+              Todavía no hay respuestas registradas para esta encuesta.
+            </p>
           </div>
 
           <template v-else>
-            <p class="text-caption text-medium-emphasis mb-3">
-              {{ totalEncuestados }} encuestado(s) en total — página {{ paginaEncuestados }} de {{ ultimaPaginaEncuestados }}.
-            </p>
+            <div class="respondents-header">
+              <div class="respondents-header__text">
+                <div class="section-title mb-1">Encuestados</div>
+                <p class="text-caption text-medium-emphasis mb-0">
+                  {{ totalEncuestados }} en total — página
+                  {{ paginaEncuestados }} de {{ ultimaPaginaEncuestados }}
+                </p>
+              </div>
+              <div class="respondents-header__badge">
+                <v-icon size="14">mdi-account-multiple-outline</v-icon>
+                <span>{{ totalEncuestados }}</span>
+              </div>
+            </div>
 
-            <v-expansion-panels variant="accordion" class="mb-4">
-              <v-expansion-panel v-for="(encuestado, i) in encuestados" :key="encuestado.encuestado_key">
-                <v-expansion-panel-title>
-                  <div class="d-flex align-center justify-space-between" style="width: 100%;">
-                    <span class="text-body-small font-weight-medium">
-                      Encuestado {{ (paginaEncuestados - 1) * 5 + i + 1 }}
-                      <span v-if="encuestado.participant" class="text-medium-emphasis">
-                        — {{ encuestado.participant.name || encuestado.participant.email }}
+            <div class="respondents-grid">
+              <div
+                v-for="(encuestado, i) in encuestados"
+                :key="encuestado.encuestado_key"
+                class="respondent-card"
+                :class="{ 'respondent-card--open': estaExpandido(encuestado.encuestado_key) }"
+              >
+                <div
+                  class="respondent-card__head"
+                  @click="toggleEncuestado(encuestado.encuestado_key)"
+                >
+                  <div class="respondent-avatar">
+                    {{ iniciales(encuestado.participant) }}
+                  </div>
+
+                  <div class="respondent-info">
+                    <div class="respondent-name">
+                      {{ nombreEncuestado(encuestado.participant) }}
+                    </div>
+                    <div class="respondent-meta">
+                      <span class="respondent-meta__pill">
+                        #{{ (paginaEncuestados - 1) * 5 + i + 1 }}
                       </span>
-                      <span v-else class="text-medium-emphasis">— Anónimo</span>
-                    </span>
-                    <span class="text-caption text-medium-emphasis me-3">
-                      {{ formatearFechaHora(encuestado.submitted_at) }}
-                    </span>
+                      <span class="respondent-meta__dot">·</span>
+                      <v-icon size="12">mdi-clock-outline</v-icon>
+                      <span>{{ formatearFechaHora(encuestado.submitted_at) }}</span>
+                    </div>
                   </div>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text>
-                  <div v-for="respuesta in encuestado.answers" :key="respuesta.question_id" class="mb-3">
-                    <p class="text-body-small font-weight-medium mb-1">{{ respuesta.statement }}</p>
-                    <p class="text-body-small text-medium-emphasis mb-0">
-                      {{ formatearValorRespuesta(respuesta) }}
-                    </p>
-                  </div>
-                </v-expansion-panel-text>
-              </v-expansion-panel>
-            </v-expansion-panels>
 
-            <div class="d-flex justify-center">
+                  <v-btn
+                    icon
+                    variant="text"
+                    size="small"
+                    class="respondent-toggle"
+                    :ripple="false"
+                  >
+                    <v-icon size="20">
+                      {{ estaExpandido(encuestado.encuestado_key) ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                    </v-icon>
+                  </v-btn>
+                </div>
+
+                <v-expand-transition>
+                  <div
+                    v-if="estaExpandido(encuestado.encuestado_key)"
+                    class="respondent-card__body"
+                  >
+                    <div
+                      v-for="(respuesta, idx) in encuestado.answers"
+                      :key="respuesta.question_id"
+                      class="answer-item"
+                    >
+                      <div class="answer-item__q">
+                        <span class="answer-item__num">{{ idx + 1 }}</span>
+                        {{ respuesta.statement }}
+                      </div>
+                      <div class="answer-item__a">
+                        {{ formatearValorRespuesta(respuesta) }}
+                      </div>
+                    </div>
+                  </div>
+                </v-expand-transition>
+              </div>
+            </div>
+
+            <div class="respondents-pagination">
               <v-pagination
                 v-model="paginaEncuestados"
                 :length="ultimaPaginaEncuestados"
@@ -528,9 +579,6 @@ function imprimirBoletin() {
   window.print();
 }
 
-// Línea de una sola frase por pregunta, para el Boletín — reutiliza el
-// mismo "summary" ya calculado por el backend para la pestaña general,
-// solo lo condensa a texto en vez de un gráfico.
 const resumenCompacto = computed(() => questionsWithSummary.value.map((q) => {
   let texto = '—';
   if (q.type === 'escala') {
@@ -547,15 +595,41 @@ const resumenCompacto = computed(() => questionsWithSummary.value.map((q) => {
   return { id: q.id, statement: q.statement, texto };
 }));
 
-// =====================================================================
-// POR ENCUESTADO — paginado, 5 por página (ver ReportController::byParticipant)
-// =====================================================================
 const encuestados = ref([]);
 const cargandoPorEncuestado = ref(false);
 const paginaEncuestados = ref(1);
 const totalEncuestados = ref(0);
 const ultimaPaginaEncuestados = ref(1);
 let porEncuestadoCargadoAlMenosUnaVez = false;
+
+// =============================================
+// Estado de expansión de cada tarjeta de encuestado
+// =============================================
+const expandidos = ref({});
+
+function estaExpandido(key) {
+  return !!expandidos.value[key];
+}
+
+function toggleEncuestado(key) {
+  expandidos.value = {
+    ...expandidos.value,
+    [key]: !expandidos.value[key],
+  };
+}
+
+function nombreEncuestado(participant) {
+  if (!participant) return 'Anónimo';
+  return participant.name || participant.email || 'Anónimo';
+}
+
+function iniciales(participant) {
+  const nombre = nombreEncuestado(participant);
+  if (nombre === 'Anónimo') return '?';
+  const partes = nombre.trim().split(/\s+/);
+  if (partes.length === 1) return partes[0].charAt(0).toUpperCase();
+  return (partes[0].charAt(0) + partes[partes.length - 1].charAt(0)).toUpperCase();
+}
 
 function formatearValorRespuesta(respuesta) {
   const valor = respuesta.value;
@@ -581,8 +655,6 @@ async function cargarPorEncuestado() {
   }
 }
 
-// Carga perezosa: solo la primera vez que se entra a esta pestaña, para
-// no pedir datos que tal vez el usuario nunca revise.
 function asegurarCargaPorEncuestado() {
   if (porEncuestadoCargadoAlMenosUnaVez) return;
   porEncuestadoCargadoAlMenosUnaVez = true;
@@ -591,8 +663,6 @@ function asegurarCargaPorEncuestado() {
 
 onMounted(async () => {
   try {
-    // Dos llamadas en paralelo (antes eran 3 en serie + 1 por pregunta):
-    // la encuesta con sus preguntas y el consolidado de resultados.
     const [surveyResponse, resultsResponse] = await Promise.all([
       backendApi.get(`/surveys/${surveyId}`),
       backendApi.get(`/reports/surveys/${surveyId}/results`),
@@ -600,7 +670,6 @@ onMounted(async () => {
 
     survey.value = surveyResponse.data;
     metrics.value = resultsResponse.data.metrics;
-    // Indicadores de satisfacción (promedio de preguntas tipo "escala").
     satisfaction.value = resultsResponse.data.satisfaction || [];
 
     const summaries = resultsResponse.data.summaries || {};
@@ -624,12 +693,6 @@ onMounted(async () => {
   }
 });
 
-// =====================================================================
-// EXPORTACIÓN — los endpoints devuelven el archivo directamente (no
-// JSON), y como son rutas administrativas (requieren el Bearer token)
-// no se pueden usar en un <a href="..."> plano: se piden como blob con
-// backendApi (que ya manda el token) y se dispara la descarga a mano.
-// =====================================================================
 function descargarBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -669,9 +732,6 @@ async function exportarPdf() {
   }
 }
 
-// =====================================================================
-// COMPARAR PERÍODOS
-// =====================================================================
 async function compararPeriodos() {
   comparacionError.value = null;
   comparacion.value = null;
@@ -700,9 +760,6 @@ async function compararPeriodos() {
   }
 }
 
-// =====================================================================
-// REPORTE POR DEPENDENCIA — usa la dependencia dueña de esta encuesta.
-// =====================================================================
 async function exportarReporteDependenciaPdf() {
   exportandoReporteDependencia.value = true;
   try {
@@ -722,7 +779,7 @@ async function exportarReporteDependenciaPdf() {
 async function abrirReporteDependencia() {
   dialogDependencia.value = true;
 
-  if (reporteDependencia.value) return; // ya cargado, no repetir la llamada
+  if (reporteDependencia.value) return;
 
   cargandoReporteDependencia.value = true;
   try {
@@ -739,17 +796,239 @@ async function abrirReporteDependencia() {
 </script>
 
 <style scoped>
-.metric-icon-box {
-  width: 55px;
-  height: 54px;
+.results-page {
+  padding-bottom: 24px;
+}
+
+/* ---------- Hero Header ---------- */
+.hero {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 32px 0 20px;
+  background: linear-gradient(135deg, #EDF2FF 0%, #F4F6FD 60%, #E8F0FB 100%);
+  border: 1px solid #E3EBF5;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(72, 128, 255, 0.18), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(72, 128, 255, 0.10), transparent 40%);
+  pointer-events: none;
+}
+
+.hero__content {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 26px 28px;
+}
+
+.hero__text { min-width: 0; }
+
+.hero__eyebrow {
+  display: inline-block;
+  font-family: Poppins;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4880FF;
+  background: rgba(72, 128, 255, 0.10);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.hero__title {
+  margin: 0 0 6px 0;
+  line-height: 1.15;
+  color: #063456;
+}
+
+.hero__subtitle {
+  margin: 0;
+  line-height: 1.4;
+  color: #4a5b6b;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Título de sección con acento ---------- */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: Poppins;
+  font-weight: 600;
+  font-size: 14px;
+  color: #313845;
+  margin-bottom: 14px;
+}
+
+.section-title::before {
+  content: "";
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: #4880FF;
+}
+
+/* ---------- KPI grid / cards ---------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.kpi-card {
+  position: relative;
+  border: 1px solid #E3EBF5;
+  border-radius: 8px;
+  padding: 16px 18px 14px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.kpi-card--primary::before { background: #4880FF; }
+.kpi-card--success::before { background: #2FB56B; }
+.kpi-card--accent::before  { background: #2D52A7; }
+
+.kpi-card__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   background: #E9EDFD;
-  border-radius: 4px;
+  color: #063456;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  margin-bottom: 10px;
 }
 
+.kpi-card--success .kpi-card__icon {
+  background: #E4F7EC;
+  color: #1F8F51;
+}
+
+.kpi-card--accent .kpi-card__icon {
+  background: #E4EAF7;
+  color: #2D52A7;
+}
+
+.kpi-card__value {
+  font-family: Poppins;
+  font-weight: 700;
+  font-size: 26px;
+  color: #063456;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.kpi-card__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7986;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Boletín ---------- */
+.boletin-card {
+  overflow: hidden;
+  border: 1px solid #E3EBF5;
+  border-radius: 7px;
+  background-color: #ffffff;
+}
+
+.boletin-hero {
+  padding: 28px 28px 22px;
+  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  color: #ffffff;
+}
+
+.boletin-hero__eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+
+.boletin-hero__title {
+  font-family: Poppins;
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.2;
+  margin: 0 0 6px 0;
+}
+
+.boletin-hero__sub {
+  font-size: 12px;
+  opacity: 0.85;
+  margin: 0 0 18px 0;
+  line-height: 1.4;
+}
+
+.boletin-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 11.5px;
+  opacity: 0.92;
+}
+
+.boletin-hero__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.boletin-fila {
+  border-bottom: 1px solid #F0F3F9;
+}
+
+.boletin-fila:last-child {
+  border-bottom: none;
+}
+
+.boletin-fila__q {
+  padding-right: 12px;
+}
+
+/* ---------- General ---------- */
+.action-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.question-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+/* ---------- Componentes ---------- */
 .question-number {
   display: inline-flex;
   align-items: center;
@@ -774,19 +1053,221 @@ async function abrirReporteDependencia() {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.boletin-card {
-  border: 1px solid #E3EBF5;
-  background-color: #ffffff;
+/* ============================================= */
+/* POR ENCUESTADO — tarjetas                     */
+/* ============================================= */
+
+.respondents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.boletin-fila {
-  border-bottom: 1px solid #F0F3F9;
+.respondents-header__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #EDF2FF;
+  color: #2D52A7;
+  font-family: Poppins;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.respondents-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.respondent-card {
+  border: 1px solid #E3EBF5;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+}
+
+.respondent-card:hover {
+  box-shadow: 0 4px 14px rgba(72, 128, 255, 0.10);
+  border-color: #CFE0FF;
+}
+
+.respondent-card--open {
+  border-color: #4880FF;
+  box-shadow: 0 6px 18px rgba(72, 128, 255, 0.12);
+}
+
+.respondent-card__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.respondent-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #4880FF;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Poppins;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(72, 128, 255, 0.25);
+}
+
+.respondent-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.respondent-name {
+  font-family: Poppins;
+  font-weight: 600;
+  font-size: 13px;
+  color: #313845;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.respondent-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #8a97a3;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.respondent-meta__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #F0F4FB;
+  color: #4880FF;
+  font-weight: 600;
+  font-size: 10.5px;
+}
+
+.respondent-meta__dot { opacity: 0.5; }
+
+.respondent-toggle {
+  flex-shrink: 0;
+  color: #8a97a3 !important;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.respondent-card--open .respondent-toggle {
+  color: #4880FF !important;
+}
+
+.respondent-card__body {
+  border-top: 1px solid #F0F3F9;
+  padding: 8px 18px 14px;
+  background: linear-gradient(180deg, #FAFBFF 0%, #FFFFFF 100%);
+}
+
+.answer-item {
+  padding: 12px 0;
+  border-bottom: 1px dashed #EAEFF7;
+}
+
+.answer-item:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.answer-item__q {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: Poppins;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4a5b6b;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.answer-item__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #E9EDFD;
+  color: #4880FF;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.answer-item__a {
+  font-family: Poppins;
+  font-size: 12px;
+  color: #313845;
+  line-height: 1.5;
+  padding-left: 14px;
+  border-left: 2px solid #4880FF;
+  margin-left: 8px;
+}
+
+.empty-respondents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  border: 1px dashed #D9E2F0;
+  border-radius: 10px;
+  background: #FAFBFF;
+}
+
+.respondents-pagination {
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+@media (min-width: 700px) {
+  .respondents-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media print {
   .results-tabs,
   .no-print {
     display: none !important;
+  }
+
+  .hero,
+  .hero__actions {
+    display: none !important;
+  }
+
+  .boletin-hero {
+    background: #ffffff !important;
+    color: #063456 !important;
   }
 }
 </style>

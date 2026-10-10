@@ -1,19 +1,30 @@
 <template>
-  <div class="pa-4">
-    <v-row class="align-center mt-8 mb-4">
-      <v-col cols="auto">
-        <h3 class="text-page-title">Gestión de Participantes</h3>
-        <p class="text-body-small text-medium-emphasis mb-0">
-          {{ hasPermission('surveys.viewAll') ? 'Todas las dependencias' : `Dependencia: ${miDependencia || 'Sin asignar'}` }}
-        </p>
-      </v-col>
-      <v-spacer />
-      <v-col cols="12" sm="auto">
-        <v-btn color="primary" size="small" prepend-icon="mdi-plus" class="text-button" @click="abrirNuevoGrupo">
-          Nuevo grupo
-        </v-btn>
-      </v-col>
-    </v-row>
+  <div class="participants-page">
+    <!-- ================= Hero Header ================= -->
+    <div class="hero">
+      <div class="hero__bg" />
+      <div class="hero__content">
+        <div class="hero__text">
+          <div class="hero__eyebrow">Participantes</div>
+          <h1 class="hero__title">Gestión de Participantes</h1>
+          <p class="hero__sub">
+            {{ hasPermission('surveys.viewAll') ? 'Todas las dependencias' : `Dependencia: ${miDependencia || 'Sin asignar'}` }}
+          </p>
+        </div>
+
+        <div class="hero__actions">
+          <v-btn
+            color="white"
+            variant="flat"
+            prepend-icon="mdi-plus"
+            class="text-button hero__cta"
+            @click="abrirNuevoGrupo"
+          >
+            Nuevo grupo
+          </v-btn>
+        </div>
+      </div>
+    </div>
 
     <v-row v-if="hasPermission('surveys.viewAll')" dense class="mb-2">
       <v-col cols="12" sm="4">
@@ -312,9 +323,6 @@ async function eliminarGrupo() {
 
 // =====================================================================
 // PARTICIPANTES DEL GRUPO
-// Nota: solo se soporta agregar por correo (external_email). Agregar un
-// participante "interno" por user_id requeriría un buscador de usuarios
-// de base-app-2, que hoy no expone ningún endpoint de listado/búsqueda.
 // =====================================================================
 const dialogParticipantes = ref(false);
 const grupoSeleccionado = ref(null);
@@ -357,7 +365,7 @@ async function agregarParticipante() {
     });
     nuevoParticipanteEmail.value = '';
     await cargarParticipantesGrupo();
-    await cargarGrupos(); // refresca el conteo en la tabla principal
+    await cargarGrupos();
   } catch (e) {
     errorParticipante.value = e.response?.data?.message || 'No se pudo agregar el participante.';
   } finally {
@@ -380,3 +388,89 @@ onMounted(async () => {
   await cargarGrupos();
 });
 </script>
+
+<style scoped>
+.participants-page {
+  padding-bottom: 24px;
+}
+
+/* ============================================= */
+/* HERO HEADER — estilo “boletín” azul oscuro    */
+/* ============================================= */
+.hero {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 32px 0 20px;
+  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  color: #ffffff;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.10), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(255, 255, 255, 0.06), transparent 40%);
+  pointer-events: none;
+}
+
+.hero__content {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 28px 28px 24px;
+}
+
+.hero__text { min-width: 0; }
+
+.hero__eyebrow {
+  font-family: Poppins;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+
+.hero__title {
+  font-family: Poppins;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+}
+
+.hero__sub {
+  font-size: 12px;
+  font-weight: 300;
+  opacity: 0.85;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hero__cta {
+  color: #063456 !important;
+}
+
+@media (max-width: 600px) {
+  .hero__content {
+    padding: 22px 20px 20px;
+  }
+  .hero__title {
+    font-size: 24px;
+  }
+}
+</style>

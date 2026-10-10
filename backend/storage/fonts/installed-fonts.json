@@ -1,0 +1,9 @@
+{
+    "poppins": {
+        "300": "C:\\xampp\\htdocs\\cultura2\\test-temporal\\backend\\storage\\fonts\/poppins_300_f943fac216257431cff2f09d75a53c59",
+        "normal": "C:\\xampp\\htdocs\\cultura2\\test-temporal\\backend\\storage\\fonts\/poppins_normal_d1ba48f5646f6c4f98743694d108503d",
+        "500": "C:\\xampp\\htdocs\\cultura2\\test-temporal\\backend\\storage\\fonts\/poppins_500_281064120c5dd872a255bc860078896a",
+        "600": "C:\\xampp\\htdocs\\cultura2\\test-temporal\\backend\\storage\\fonts\/poppins_600_11c25385c85e5f0168ca9fea33781058",
+        "bold": "poppins_bold_5938ffbeb39c2443a67b933c48216c81"
+    }
+}

@@ -25,7 +25,7 @@ class StatusSeeder extends Seeder
             // al Encuestador para que ajuste puntos específicos.
             ['name' => 'Corregida', 'slug' => 'needs_correction', 'description' => 'El Administrador solicitó correcciones puntuales; revisar los comentarios por sección'],
             ['name' => 'Programada', 'slug' => 'scheduled', 'description' => 'Aprobada pero esperando fecha de publicación'],
-            ['name' => 'Publicada / Activa', 'slug' => 'published', 'description' => 'Recibiendo respuestas'],
+            ['name' => 'Activa', 'slug' => 'published', 'description' => 'Recibiendo respuestas'],
             ['name' => 'En pausa', 'slug' => 'paused', 'description' => 'Detenida temporalmente, se puede reanudar'],
             ['name' => 'Cerrada', 'slug' => 'closed', 'description' => 'Recogida de datos finalizada'],
             ['name' => 'Archivada', 'slug' => 'archived', 'description' => 'Almacenada para consulta futura'],

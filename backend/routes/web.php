@@ -17,3 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/status', fn () => response()->json(["message" => "Active"]));
 
 // Route::resource('/api/department', DepartmentController::class);
+// TEMPORAL — solo para diagnosticar el PDF. Borrar después.
+Route::get('/debug-pdf', function () {
+    return view('reports.layout', ['logo' => null]);
+});

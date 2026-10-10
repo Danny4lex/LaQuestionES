@@ -52,7 +52,7 @@ class SectionController extends Controller
         $validated = $request->validate([
             'survey_id' => 'required|exists:surveys,id',
             'name' => 'required|string|max:255', // Sincronizado de 'title' a 'name'[cite: 13]
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:800',
         ]);
 
         if ($bloqueo = $this->bloquearSiNoEditable(Survey::find($validated['survey_id']))) {
@@ -86,7 +86,7 @@ class SectionController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255', // Sincronizado de 'title' a 'name'[cite: 13]
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:800',
         ]);
 
         $section->update($validated);

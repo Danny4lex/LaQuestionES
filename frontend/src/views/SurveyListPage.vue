@@ -1,129 +1,126 @@
 <template>
-  <div>
-    <v-row class="align-center mt-8 mb-4">
-      <v-col cols="auto">
-        <h3 class="text-page-title">Gestión de encuestas</h3><br>
-        <div class="summary-label">
-          {{ hasPermission('surveys.viewAll') ? 'Todas las dependencias' : `Dependencia: ${miDependencia || 'Sin asignar'}` }}
+  <div class="surveys-page">
+    <!-- ================= Hero Header ================= -->
+    <div class="hero">
+      <div class="hero__bg" />
+      <div class="hero__content">
+        <div class="hero__text">
+          <div class="hero__eyebrow">Encuestas</div>
+          <h1 class="hero__title">Gestión de encuestas</h1>
+          <p class="hero__sub">
+            {{ hasPermission('surveys.viewAll') ? 'Todas las dependencias' : `Dependencia: ${miDependencia || 'Sin asignar'}` }}
+          </p>
         </div>
-      </v-col>
-      <v-spacer />
-      <v-col cols="12" sm="auto">
-        <v-btn color="primary" size="small" prepend-icon="mdi-plus" class="text-button" @click="goToNewSurvey" v-if="hasPermission('surveys.create')">
-          Nueva encuesta
-        </v-btn>
-      </v-col>
-    </v-row>
 
-    <!-- Tarjetas resumen -->
-    <v-row dense class="mb-4 summary-row">
-      <v-col cols="12" sm="6" md="auto" class="summary-col">
-        <v-card class="summary-card" variant="flat">
-          <v-card-text class="summary-card-content pa-4">
-            <div>
-              <div class="summary-label">Total encuestas</div>
-              <h2 class="summary-value mt-1">{{ cards.total }}</h2>
-            </div>
-            <div class="summary-icon-box">
-              <v-icon class="summary-icon" color="#063456" size="24">mdi-file-document-outline</v-icon>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+        <div class="hero__actions">
+          <v-btn
+            v-if="hasPermission('surveys.create')"
+            color="white"
+            variant="flat"
+            prepend-icon="mdi-plus"
+            class="text-button hero__cta"
+            @click="goToNewSurvey"
+          >
+            Nueva encuesta
+          </v-btn>
+        </div>
+      </div>
+    </div>
 
-      <v-col cols="12" sm="6" md="auto" class="summary-col">
-        <v-card class="summary-card" variant="flat">
-          <v-card-text class="summary-card-content pa-4">
-            <div>
-              <div class="summary-label">Activas</div>
-              <h2 class="summary-value mt-1">{{ cards.activas }}</h2>
-            </div>
-            <div class="summary-icon-box">
-              <v-icon class="summary-icon" color="#063456" size="24">mdi-check-circle-outline</v-icon>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+    <!-- ================= Tarjetas resumen ================= -->
+    <div class="section-title">Resumen</div>
+    <div class="kpi-grid mb-6">
+      <div class="kpi-card kpi-card--primary">
+        <div class="kpi-card__icon">
+          <v-icon size="20">mdi-file-document-outline</v-icon>
+        </div>
+        <div class="kpi-card__value">{{ cards.total }}</div>
+        <div class="kpi-card__label">Total encuestas</div>
+      </div>
 
-      <v-col cols="12" sm="6" md="auto" class="summary-col">
-        <v-card class="summary-card" variant="flat">
-          <v-card-text class="summary-card-content pa-4">
-            <div>
-              <div class="summary-label">Borradores</div>
-              <h2 class="summary-value mt-1">{{ cards.borradores }}</h2>
-            </div>
-            <div class="summary-icon-box">
-              <v-icon class="summary-icon" color="#063456" size="24">mdi-pencil-outline</v-icon>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+      <div class="kpi-card kpi-card--success">
+        <div class="kpi-card__icon">
+          <v-icon size="20">mdi-check-circle-outline</v-icon>
+        </div>
+        <div class="kpi-card__value">{{ cards.activas }}</div>
+        <div class="kpi-card__label">Activas</div>
+      </div>
 
-      <v-col cols="12" sm="6" md="auto" class="summary-col">
-        <v-card class="summary-card" variant="flat">
-          <v-card-text class="summary-card-content pa-4">
-            <div>
-              <div class="summary-label">Finalizadas</div>
-              <h2 class="summary-value mt-1">{{ cards.finalizadas }}</h2>
-            </div>
-            <div class="summary-icon-box">
-              <v-icon class="summary-icon" color="#063456" size="24">mdi-flag-checkered</v-icon>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+      <div class="kpi-card kpi-card--accent">
+        <div class="kpi-card__icon">
+          <v-icon size="20">mdi-pencil-outline</v-icon>
+        </div>
+        <div class="kpi-card__value">{{ cards.borradores }}</div>
+        <div class="kpi-card__label">Borradores</div>
+      </div>
 
-      <v-col cols="12" sm="6" md="auto" class="summary-col">
-        <v-card class="summary-card" variant="flat">
-          <v-card-text class="summary-card-content pa-4">
-            <div>
-              <div class="summary-label">Total respuestas</div>
-              <h2 class="summary-value mt-1">{{ cards.totalRespuestas }}</h2>
-            </div>
-            <div class="summary-icon-box">
-              <v-icon class="summary-icon" color="#063456" size="24">mdi-account-group-outline</v-icon>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+      <div class="kpi-card kpi-card--muted">
+        <div class="kpi-card__icon">
+          <v-icon size="20">mdi-flag-checkered</v-icon>
+        </div>
+        <div class="kpi-card__value">{{ cards.finalizadas }}</div>
+        <div class="kpi-card__label">Finalizadas</div>
+      </div>
 
-    <!-- Filtros -->
-    <v-row dense class="mb-4 align-center filter-row">
-      <v-col cols="12" sm="6" md="6" class="filter-col-search">
-        <v-text-field
-          v-model="filtroBusqueda"
-          placeholder="Buscar encuesta..."
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="input-field filter-control"
-          @keyup.enter="filtrar"
-        />
-      </v-col>
-      <v-col cols="auto" class="d-flex align-center gap-2">
-        <v-btn
-          size="small"
-          class="text-button filter-btn"
-          @click="dialogFiltros = true"
-        >
-          <v-icon start>mdi-filter-variant</v-icon>
-          Filtros
-        </v-btn>
-        <v-btn
-          v-for="estado in filtrosRapidos"
-          :key="estado.value"
-          size="small"
-          :class="[
-            'text-button quick-filter-btn',
-            { 'quick-filter-btn--active': filtroEstado === estado.value }
-          ]"
-          @click="setFiltroEstado(estado.value)"
-        >
-          {{ estado.title }}
-        </v-btn>
-      </v-col>
-    </v-row>
+      <div class="kpi-card kpi-card--primary">
+        <div class="kpi-card__icon">
+          <v-icon size="20">mdi-account-group-outline</v-icon>
+        </div>
+        <div class="kpi-card__value">{{ cards.totalRespuestas }}</div>
+        <div class="kpi-card__label">Total respuestas</div>
+      </div>
+    </div>
+
+    <!-- ================= Filtros ================= -->
+    <v-card class="filter-card mb-5" variant="flat">
+      <v-card-text class="pa-5">
+        <div class="section-title">
+          <v-icon size="16" color="#4880FF">mdi-filter-variant</v-icon>
+          Búsqueda y filtros
+        </div>
+
+        <v-row dense class="align-center">
+          <v-col cols="12" md="6" class="filter-col-search">
+            <v-text-field
+              v-model="filtroBusqueda"
+              placeholder="Buscar encuesta..."
+              variant="outlined"
+              density="compact"
+              hide-details
+              prepend-inner-icon="mdi-magnify"
+              class="input-field filter-control"
+              @keyup.enter="filtrar"
+            />
+          </v-col>
+
+          <v-col cols="auto" class="d-flex align-center filter-actions">
+            <v-btn
+              size="small"
+              class="text-button filter-btn"
+              @click="dialogFiltros = true"
+            >
+              <v-icon start>mdi-filter-variant</v-icon>
+              Filtros
+            </v-btn>
+
+            <div class="quick-filters">
+              <v-btn
+                v-for="estado in filtrosRapidos"
+                :key="estado.value"
+                size="small"
+                :class="[
+                  'text-button quick-filter-btn',
+                  { 'quick-filter-btn--active': filtroEstado === estado.value }
+                ]"
+                @click="setFiltroEstado(estado.value)"
+              >
+                {{ estado.title }}
+              </v-btn>
+            </div>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
     <!-- Diálogo filtros adicionales -->
     <v-dialog v-model="dialogFiltros" max-width="500">
@@ -182,8 +179,9 @@
       </v-card>
     </v-dialog>
 
-    <!-- Tabla -->
-    <v-card class="mb-4" variant="flat">
+    <!-- ================= Tabla ================= -->
+    <div class="section-title">Listado</div>
+    <v-card class="table-card mb-4" variant="flat">
       <LoadingState v-if="cargandoEncuestas" message="Cargando encuestas" />
       <v-table v-else class="survey-table">
         <thead>
@@ -207,8 +205,8 @@
                 variant="flat"
                 size="small"
                 :class="['estado-btn', `estado-btn--${faseEncuesta(survey).slug || 'default'}`]"
-                  >
-                    {{ faseEncuesta(survey).nombre || '—' }}
+              >
+                {{ faseEncuesta(survey).nombre || '—' }}
               </v-btn>
             </td>
             <td class="text-body-small">{{ formatVigencia(survey) }}</td>
@@ -500,8 +498,8 @@
       </v-card>
     </v-dialog>
 
-        <!-- Diálogo: guardar la encuesta como plantilla -->
-        <v-dialog v-model="dialogPlantilla" max-width="480" persistent>
+    <!-- Diálogo: guardar la encuesta como plantilla -->
+    <v-dialog v-model="dialogPlantilla" max-width="480" persistent>
       <v-card>
         <v-card-title class="text-h6">Guardar como plantilla</v-card-title>
         <v-card-text>
@@ -550,7 +548,7 @@
       </v-card>
     </v-dialog>
 
-    <!-- Diálogo QR individual de un invitado (encuesta privada) -->
+    <!-- Diálogo QR individual de un invitado -->
     <v-dialog v-model="dialogQrParticipante" max-width="360">
       <v-card>
         <v-card-title class="text-h6">
@@ -584,17 +582,13 @@
       </v-card>
     </v-dialog>
 
-    <v-row class="align-center">
-      <v-col cols="auto">
-        <span class="text-body-small text-medium-emphasis">
-          Mostrando {{ rangoMostrado.desde }}–{{ rangoMostrado.hasta }} de {{ filteredSurveys.length }} encuestas
-        </span>
-      </v-col>
-      <v-spacer />
-      <v-col cols="auto">
-        <v-pagination v-model="paginaActual" :length="totalPaginas" :total-visible="5" size="small" />
-      </v-col>
-    </v-row>
+    <!-- Paginación -->
+    <div class="pagination-footer">
+      <span class="text-body-small text-medium-emphasis">
+        Mostrando {{ rangoMostrado.desde }}–{{ rangoMostrado.hasta }} de {{ filteredSurveys.length }} encuestas
+      </span>
+      <v-pagination v-model="paginaActual" :length="totalPaginas" :total-visible="5" size="small" />
+    </div>
   </div>
 </template>
 
@@ -622,7 +616,7 @@ const dialogFiltros = ref(false);
 const miDependencia = JSON.parse(localStorage.getItem('survey_profile') || 'null')?.dependency?.name || null;
 
 const estados = [
-  { title: 'Publicada', value: 'published_waiting' },
+
   { title: 'Todos los estados', value: 'all' },
   { title: 'Borrador', value: 'draft' },
   { title: 'En revisión', value: 'review' },
@@ -674,7 +668,7 @@ const filteredSurveys = computed(() => {
 });
 
 // ===================== PAGINACIÓN EN EL NAVEGADOR =====================
-const POR_PAGINA = 20;
+const POR_PAGINA = 10;
 const paginaActual = ref(1);
 
 const totalPaginas = computed(() =>
@@ -693,17 +687,14 @@ const rangoMostrado = computed(() => {
   return { desde, hasta: Math.min(desde + POR_PAGINA - 1, total) };
 });
 
-// Al cambiar un filtro se vuelve a la página 1.
 watch([filtroBusqueda, filtroEstado, filtroTipo, filtroDependencia], () => {
   paginaActual.value = 1;
 });
 
-// Si al eliminar quedan menos páginas, no se queda en una vacía.
 watch(totalPaginas, (total) => {
   if (paginaActual.value > total) paginaActual.value = total;
 });
 
-// ===================== COLOR DE ESTADO (todos en gris por ahora) =====================
 function estadoColor(slug) {
   switch (slug) {
     case 'published': return 'default';
@@ -717,27 +708,11 @@ function estadoColor(slug) {
     case 'archived': return 'default';
     case 'paused': return 'default';
     default: return 'default';
-
-    // case 'published': return 'success';
-    // case 'scheduled': return 'warning';
-    // case 'closed': return 'error';
-    // case 'draft': return 'grey';
-    // case 'approved': return 'success';
-    // case 'review': return 'info';
-    // case 'rejected': return 'error';
-    // case 'needs_correction': return 'warning';
-    // case 'archived': return 'grey-darken-1';
-    // case 'paused': return 'orange';
   }
 }
 
-// "Publicada" (aún no abre) vs "Publicada / Activa" (ya abrió).
 function faseEncuesta(survey) {
-  const slug = survey.status?.slug;
-  if (slug === 'published' && survey.start_date && new Date(survey.start_date) > new Date()) {
-    return { slug: 'published_waiting', nombre: 'Publicada' };
-  }
-  return { slug, nombre: survey.status?.name };
+  return { slug: survey.status?.slug, nombre: survey.status?.name };
 }
 
 function formatVigencia(survey) {
@@ -746,9 +721,6 @@ function formatVigencia(survey) {
   return `${inicio} - ${fin}`;
 }
 
-// ===================== ACCIONES DEL MENÚ =====================
-// Solo aparecen las que el usuario puede hacer y las que están disponibles
-// para el estado actual de la encuesta.
 function accionesDe(survey) {
   const slug = survey.status?.slug;
   const acciones = [];
@@ -822,9 +794,6 @@ const refrescandoId = ref(null);
 const duplicandoId = ref(null);
 let estadoBorradorId = null;
 
-// El endpoint /surveys/{id}/duplicate exige status_id (a qué estado nace
-// la copia). Siempre nace como Borrador, así que resolvemos ese id una
-// sola vez y lo cacheamos.
 async function resolverEstadoBorradorId() {
   if (estadoBorradorId) return estadoBorradorId;
   const { data } = await backendApi.get('/statuses');
@@ -950,7 +919,6 @@ function formatFecha(fecha) {
 const dialogDistribucion = ref(false);
 const encuestaDistribucion = ref(null);
 const emailsInvitar = ref('');
-// Compartir con la organización
 const incluirSubdependencias = ref(false);
 const resumenOrganizacion = ref(null);
 const cargandoOrganizacion = ref(false);
@@ -992,7 +960,6 @@ async function invitarOrganizacion() {
   }
 }
 
-// Al activar/desactivar sub-dependencias se recalcula el resumen.
 watch(incluirSubdependencias, cargarResumenOrganizacion);
 
 const invitando = ref(false);
@@ -1006,9 +973,6 @@ const regenerandoQr = ref(false);
 const qrImageUrl = ref(null);
 const qrPublicUrl = ref('');
 
-// Si el QR apunta a una dirección distinta a la que usa el administrador
-// (típico: FRONTEND_URL con "localhost" en el backend), el celular de quien
-// lo escanee no podrá abrirlo. Se avisa para corregirlo antes de compartirlo.
 const qrAdvertencia = computed(() => {
   if (!qrPublicUrl.value) return '';
   try {
@@ -1028,7 +992,6 @@ const qrAdvertencia = computed(() => {
   return '';
 });
 
-// Guardar como plantilla
 const dialogPlantilla = ref(false);
 const guardandoPlantilla = ref(false);
 const errorPlantilla = ref(null);
@@ -1073,8 +1036,6 @@ async function guardarPlantilla() {
     guardandoPlantilla.value = false;
   }
 }
-
-
 
 const dialogQrParticipante = ref(false);
 const participanteQr = ref(null);
@@ -1122,10 +1083,6 @@ async function cargarParticipantes(surveyId) {
   }
 }
 
-// La ruta de imagen del QR es administrativa (requiere el Bearer token),
-// así que no se puede usar directo en un <img src="..."> — se descarga
-// como blob con backendApi (que ya manda el token) y se arma una URL de
-// objeto local para mostrarla/descargarla.
 function liberarQrPrevio() {
   if (qrImageUrl.value) {
     URL.revokeObjectURL(qrImageUrl.value);
@@ -1143,11 +1100,9 @@ async function cargarQr(surveyId) {
     });
     qrImageUrl.value = URL.createObjectURL(response.data);
 
-    // URL real que codifica el QR (la arma el backend con FRONTEND_URL).
     const info = await backendApi.get(`/surveys/${surveyId}/qr-code`);
     qrPublicUrl.value = info.data.public_url;
   } catch (e) {
-    // 404 = todavía no existe el QR; se muestra el botón "Generar".
     if (e.response?.status !== 404) {
       alert.error('No se pudo cargar el código QR.');
     }
@@ -1237,7 +1192,6 @@ async function copiarAlPortapapeles(texto) {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(texto);
     } else {
-      // Respaldo para conexiones http (sin contexto seguro).
       const area = document.createElement('textarea');
       area.value = texto;
       area.style.position = 'fixed';
@@ -1253,7 +1207,6 @@ async function copiarAlPortapapeles(texto) {
   }
 }
 
-// Convierte el SVG del QR a PNG (1024 px, fondo blanco) y lo descarga.
 function descargarQrPng(svgUrl, nombreArchivo) {
   const img = new Image();
   img.onload = () => {
@@ -1284,7 +1237,6 @@ function descargarQrPng(svgUrl, nombreArchivo) {
   img.src = svgUrl;
 }
 
-// QR individual de un invitado (encuesta privada).
 async function abrirQrParticipante(participante) {
   participanteQr.value = participante;
   dialogQrParticipante.value = true;
@@ -1313,87 +1265,206 @@ function cerrarQrParticipante(cerrar = true) {
 }
 
 onMounted(async () => {
-  // En paralelo: la lista no necesita esperar a las dependencias.
   await Promise.all([cargarDependencias(), cargarEncuestas()]);
 });
 </script>
 
-
 <style scoped>
-/* ===================== TARJETAS RESUMEN ===================== */
-.summary-row {
-  flex-wrap: nowrap;
+.surveys-page {
+  padding-bottom: 24px;
+}
+
+/* ============================================= */
+/* HERO HEADER — estilo “boletín” azul oscuro    */
+/* ============================================= */
+.hero {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 32px 0 20px;
+  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  color: #ffffff;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.10), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(255, 255, 255, 0.06), transparent 40%);
+  pointer-events: none;
+}
+
+.hero__content {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 28px 28px 24px;
 }
 
-.summary-col {
-  flex: 1 1 0;
-  min-width: 160px;
-  width: auto;
+.hero__text { min-width: 0; }
+
+.hero__eyebrow {
+  font-family: Poppins;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 8px;
 }
 
-.summary-card {
-  height: 115px;
-  border-radius: 7px !important;
-  width: 100%;
-  max-width: 100%;
+.hero__title {
+  font-family: Poppins;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+}
+
+.hero__sub {
+  font-size: 12px;
+  font-weight: 300;
+  opacity: 0.85;
   margin: 0;
+  line-height: 1.4;
 }
 
-.summary-card-content {
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hero__cta {
+  color: #063456 !important;
+}
+
+/* ============================================= */
+/* TÍTULOS DE SECCIÓN CON ACENTO                  */
+/* ============================================= */
+.section-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 100%;
+  gap: 8px;
+  font-family: Poppins;
+  font-weight: 600;
+  font-size: 14px;
+  color: #313845;
+  margin-bottom: 14px;
 }
 
-.summary-label {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 100%;
-  letter-spacing: 0%;
-  color: #063456;
+.section-title::before {
+  content: "";
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: #4880FF;
 }
 
-.summary-value {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
-  font-size: 36px;
-  line-height: 100%;
-  letter-spacing: 0%;
+/* ============================================= */
+/* KPI GRID / CARDS                               */
+/* ============================================= */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
 }
 
-.summary-icon-box {
+.kpi-card {
+  position: relative;
+  border: 1px solid #E3EBF5;
+  border-radius: 8px;
+  padding: 16px 18px 14px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+.kpi-card:hover {
+  box-shadow: 0 6px 16px rgba(72, 128, 255, 0.10);
+  transform: translateY(-1px);
+}
+
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.kpi-card--primary::before { background: #4880FF; }
+.kpi-card--success::before { background: #2FB56B; }
+.kpi-card--accent::before  { background: #2D52A7; }
+.kpi-card--muted::before   { background: #D9D9D9; }
+
+.kpi-card__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   background: #E9EDFD;
-  width: 55px;
-  height: 54px;
-  border-radius: 4px;
+  color: #063456;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  margin-bottom: 10px;
 }
 
-.summary-icon {
-  font-size: 24px !important;
-  width: 24px !important;
-  height: 24px !important;
+.kpi-card--success .kpi-card__icon {
+  background: #E4F7EC;
+  color: #1F8F51;
 }
 
-/* ===================== FILTROS ===================== */
-.filter-row {
-  flex-wrap: nowrap;
+.kpi-card--accent .kpi-card__icon {
+  background: #E4EAF7;
+  color: #2D52A7;
+}
+
+.kpi-card--muted .kpi-card__icon {
+  background: #F1F3F6;
+  color: #6b7986;
+}
+
+.kpi-card__value {
+  font-family: Poppins;
+  font-weight: 700;
+  font-size: 26px;
+  color: #063456;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.kpi-card__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7986;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ============================================= */
+/* FILTROS                                        */
+/* ============================================= */
+.filter-card {
+  border: 1px solid #E3EBF5;
+  background: #ffffff;
+  border-radius: 8px;
 }
 
 .filter-col-search {
   min-width: 0;
-  flex: 1 1 auto;
 }
 
 /* Input de búsqueda con fondo azul claro */
 .filter-control :deep(.v-field) {
-  background-color: #E8F0F8 !important;
+  background-color: #F4F7FE !important;
   border-radius: 6px !important;
 }
 
@@ -1402,9 +1473,20 @@ onMounted(async () => {
 }
 
 .filter-control :deep(.v-field__input) {
-  min-height: 30px !important;
+  min-height: 32px !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+}
+
+/* Layout de acciones de filtro */
+.filter-actions {
+  gap: 14px;
+}
+
+.quick-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Botones de filtro */
@@ -1414,17 +1496,19 @@ onMounted(async () => {
   border-radius: 6px !important;
   background-color: #ffffff !important;
   box-shadow: none !important;
-  border: none !important;
-  font-size: 10px !important;
+  border: 1px solid #D9E2F0 !important;
+  font-family: Poppins;
+  font-size: 11px !important;
   font-weight: 500 !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
-  padding: 0 16px !important;
-  min-width: 100px !important;
+  padding: 0 14px !important;
+  min-width: 90px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #374957 !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .filter-btn .v-icon,
@@ -1434,11 +1518,13 @@ onMounted(async () => {
 
 .filter-btn:hover,
 .quick-filter-btn:hover {
-  background-color: #F0F2F5 !important;
+  background-color: #F0F4FB !important;
+  border-color: #4880FF !important;
 }
 
 .quick-filter-btn--active {
-  background-color: #447AF4 !important;
+  background-color: #4880FF !important;
+  border-color: #4880FF !important;
   color: #ffffff !important;
 }
 
@@ -1447,11 +1533,57 @@ onMounted(async () => {
 }
 
 .quick-filter-btn--active:hover {
-  background-color: #447AF4 !important;
+  background-color: #2D52A7 !important;
+  border-color: #2D52A7 !important;
 }
 
-/* ===================== BOTONES DE ESTADO ===================== */
-/* Etiqueta neutra común + punto de color de la Propuesta 2 */
+/* ============================================= */
+/* TABLA                                          */
+/* ============================================= */
+.table-card {
+  border: 1px solid #E3EBF5;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.survey-table :deep(th) {
+  background: #F8FAFF;
+  font-family: Poppins;
+  font-weight: 600;
+  font-size: 11px;
+  color: #313845;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #E3EBF5 !important;
+}
+
+.survey-table :deep(th),
+.survey-table :deep(td) {
+  white-space: nowrap;
+}
+
+.survey-table :deep(.v-table__wrapper) {
+  overflow-x: auto;
+}
+
+.survey-table :deep(tbody tr) {
+  transition: background-color 0.15s ease;
+}
+
+.survey-table :deep(tbody tr:hover) {
+  background-color: #F8FAFF;
+}
+
+.col-nombre {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================= */
+/* BOTONES DE ESTADO                              */
+/* ============================================= */
 .estado-btn {
   height: 23px !important;
   min-width: 90px !important;
@@ -1475,7 +1607,7 @@ onMounted(async () => {
   justify-content: flex-start;
   width: 100%;
 }
-/* Punto de color antes del texto */
+
 .estado-btn :deep(.v-btn__content)::before {
   content: '';
   display: inline-block;
@@ -1503,7 +1635,9 @@ onMounted(async () => {
 .estado-btn--default :deep(.v-btn__content)::before { background-color: #D9D9D9; }
 .estado-btn--published_waiting :deep(.v-btn__content)::before { background-color: #4880FF; }
 
-/* ===================== ÍCONOS DE ACCIONES ===================== */
+/* ============================================= */
+/* ÍCONOS DE ACCIONES                             */
+/* ============================================= */
 .action-icon-btn {
   color: #374957 !important;
   background-color: transparent !important;
@@ -1515,39 +1649,37 @@ onMounted(async () => {
   opacity: 1 !important;
 }
 
-/* Responsive */
+/* ============================================= */
+/* PAGINACIÓN                                     */
+/* ============================================= */
+.pagination-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 4px 0;
+}
+
+/* ============================================= */
+/* RESPONSIVE                                     */
+/* ============================================= */
 @media (max-width: 600px) {
-  .filter-row {
-    flex-wrap: wrap;
+  .hero__content {
+    padding: 22px 20px 20px;
   }
-  .filter-col-search {
-    flex: 1 1 100%;
+  .hero__title {
+    font-size: 24px;
   }
-}
-
-/* ===================== TABLA DE ENCUESTAS: nada baja de línea ===================== */
-.survey-table :deep(th),
-.survey-table :deep(td) {
-  white-space: nowrap;
-}
-
-/* Si no cabe, aparece scroll horizontal en vez de partir líneas */
-.survey-table :deep(.v-table__wrapper) {
-  overflow-x: auto;
-}
-
-/* Nombre en una sola línea; si es muy largo se corta con "…" (el nombre completo sale al pasar el mouse) */
-.col-nombre {
-  max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  .pagination-footer {
+    justify-content: center;
+  }
 }
 </style>
 
 <!-- ============================================================
      MENÚ DE ACCIONES (v-menu) — azul claro translúcido
      Va SIN scoped porque el menú se dibuja fuera del componente
-     y los estilos con scope no lo alcanzan.
      ============================================================ -->
 <style>
 .acciones-menu .v-list {
