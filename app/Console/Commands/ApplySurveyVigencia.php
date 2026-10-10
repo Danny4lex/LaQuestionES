@@ -7,27 +7,11 @@ use App\Models\Survey;
 use App\Services\ChangeLogService;
 use App\Services\SurveyStatusFlowService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 
-// =========================================================================
-// Automatización de vigencia (regla del documento de requerimientos:
-// "Controlar la vigencia de las encuestas").
-//
-// Antes, start_date/end_date solo se guardaban como datos informativos:
-// una encuesta "scheduled" nunca pasaba sola a "published" el día que
-// tocaba, y una "published" que ya venció su end_date se quedaba
-// recibiendo respuestas indefinidamente hasta que alguien la cerrara a
-// mano. Kernel::schedule() estaba vacío, sin ningún comando registrado.
-//
-// Este comando:
-//   1. Publica automáticamente las encuestas en estado "scheduled" cuya
-//      start_date ya llegó (start_date <= hoy).
-//   2. Cierra automáticamente las encuestas en estado "published" cuya
-//      end_date ya pasó (end_date < hoy).
-//
-// Reutiliza SurveyStatusFlowService para que la transición respete las
-// mismas reglas que un cambio de estado manual, y ChangeLogService para
-// dejar rastro de auditoría de cada cambio automático.
-// =========================================================================
+// Automatización de vigencia:
+//   1. Publica las encuestas "Programadas" cuya fecha y hora de inicio ya llegó.
+//   2. Cierra las encuestas "Publicadas" cuya fecha y hora de fin ya pasó.
 class ApplySurveyVigencia extends Command
 {
     protected $signature = 'surveys:apply-vigencia';
@@ -57,18 +41,26 @@ class ApplySurveyVigencia extends Command
             ->where('start_date', '<=', now())
             ->get();
 
+        $hechas = 0;
+
         foreach ($surveys as $survey) {
-            $statusFlow->transition($survey, $publishedStatus->id);
-            $changeLog->log(
-                null,
-                'Survey',
-                'Publicación automática',
-                "La encuesta \"{$survey->title}\" se publicó automáticamente al llegar su fecha de inicio ({$survey->start_date}).",
-                $survey->id
-            );
+            try {
+                $statusFlow->transition($survey, $publishedStatus->id);
+                $this->limpiarCache($survey->id);
+                $changeLog->log(
+                    null,
+                    'Survey',
+                    'Publicación automática',
+                    "La encuesta \"{$survey->title}\" se publicó automáticamente al llegar su fecha de inicio ({$survey->start_date}).",
+                    $survey->id
+                );
+                $hechas++;
+            } catch (\Throwable $e) {
+                $this->warn("No se pudo publicar la encuesta {$survey->id}: {$e->getMessage()}");
+            }
         }
 
-        return $surveys->count();
+        return $hechas;
     }
 
     private function cerrarVencidas(SurveyStatusFlowService $statusFlow, ChangeLogService $changeLog): int
@@ -84,17 +76,33 @@ class ApplySurveyVigencia extends Command
             ->where('end_date', '<', now())
             ->get();
 
+        $hechas = 0;
+
         foreach ($surveys as $survey) {
-            $statusFlow->transition($survey, $closedStatus->id);
-            $changeLog->log(
-                null,
-                'Survey',
-                'Cierre automático',
-                "La encuesta \"{$survey->title}\" se cerró automáticamente al vencer su fecha de fin ({$survey->end_date}).",
-                $survey->id
-            );
+            try {
+                $statusFlow->transition($survey, $closedStatus->id);
+                $this->limpiarCache($survey->id);
+                $changeLog->log(
+                    null,
+                    'Survey',
+                    'Cierre automático',
+                    "La encuesta \"{$survey->title}\" se cerró automáticamente al vencer su fecha de fin ({$survey->end_date}).",
+                    $survey->id
+                );
+                $hechas++;
+            } catch (\Throwable $e) {
+                $this->warn("No se pudo cerrar la encuesta {$survey->id}: {$e->getMessage()}");
+            }
         }
 
-        return $surveys->count();
+        return $hechas;
+    }
+
+    // El detalle de la encuesta (editor y resultados) se guarda en caché
+    // 24 horas; sin esto seguiría mostrando el estado anterior.
+    private function limpiarCache(int $surveyId): void
+    {
+        Cache::forget("survey_detail_{$surveyId}_full");
+        Cache::forget("survey_detail_{$surveyId}_anon");
     }
 }
