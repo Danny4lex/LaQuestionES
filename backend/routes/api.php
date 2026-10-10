@@ -23,6 +23,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ChangeLogController;
 use App\Http\Controllers\SessionLogController;
 use App\Http\Controllers\SurveyPublicController;
+use App\Http\Controllers\SurveyStructureController;
 
 /*
 |============================================================================
@@ -129,6 +130,7 @@ Route::middleware(['auth:api', 'auth.external'])->group(function () {
     Route::post('/surveys/{survey}/duplicate', [SurveyController::class, 'duplicate'])
         ->middleware('permission:surveys.create');
     Route::patch('/surveys/{survey}/status', [SurveyController::class, 'changeStatus']);
+    Route::put('/surveys/{survey}/structure', [SurveyStructureController::class, 'sync']);
     Route::post('/surveys', [SurveyController::class, 'store'])
         ->middleware('permission:surveys.create');
     Route::delete('/surveys/{survey}', [SurveyController::class, 'destroy'])
