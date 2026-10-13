@@ -1,7 +1,7 @@
 <template>
   <div class="surveys-page">
     <!-- ================= Hero Header ================= -->
-    <div class="hero">
+    <div class="hero" :class="heroClase('encuestas')">
       <div class="hero__bg" />
       <div class="hero__content">
         <div class="hero__text">
@@ -13,17 +13,18 @@
         </div>
 
         <div class="hero__actions">
-          <v-btn
-            v-if="hasPermission('surveys.create')"
-            color="white"
-            variant="flat"
-            prepend-icon="mdi-plus"
-            class="text-button hero__cta"
-            @click="goToNewSurvey"
-          >
-            Nueva encuesta
-          </v-btn>
-        </div>
+          
+  <v-btn
+    v-if="hasPermission('surveys.create')"
+    color="white"
+    variant="flat"
+    prepend-icon="mdi-plus"
+    class="text-button hero__cta"
+    @click="goToNewSurvey"
+  >
+    Nueva encuesta
+  </v-btn>
+</div>
       </div>
     </div>
 
@@ -117,6 +118,19 @@
                 {{ estado.title }}
               </v-btn>
             </div>
+            <v-btn
+  icon
+  size="small"
+  variant="text"
+  color="#2D52A7"
+  class="ms-1"
+  title="Refrescar encuestas"
+  aria-label="Refrescar encuestas"
+  :loading="cargandoEncuestas"
+  @click="cargarEncuestas"
+>
+  <v-icon size="18">mdi-refresh</v-icon>
+</v-btn>
           </v-col>
         </v-row>
       </v-card-text>
@@ -512,6 +526,17 @@
             class="mb-3"
             hide-details="auto"
           />
+          <v-select
+              v-model="plantillaForm.survey_category_id"
+              :items="categoriasPlantilla"
+              item-title="name"
+              item-value="id"
+              label="Categoría de la plantilla"
+              variant="outlined"
+              density="compact"
+              class="mb-3"
+              hide-details="auto"
+            />
           <v-textarea
             v-model="plantillaForm.description"
             label="Descripción (opcional)"
@@ -599,6 +624,9 @@ import backendApi from '@/services/backendApi';
 import useAuth from '@/composables/useAuth';
 import useAlert from '@/composables/useAlert';
 import LoadingState from '@/components/LoadingState.vue';
+import useHeroStyle from '@/composables/useHeroStyle';
+
+const { heroClase } = useHeroStyle();
 
 const router = useRouter();
 const { hasPermission } = useAuth();
@@ -776,8 +804,9 @@ function verResultados(id) {
   router.push(`/surveys/${id}/results`);
 }
 
-async function cargarEncuestas() {
-  cargandoEncuestas.value = true;
+async function cargarEncuestas(opciones) {
+  const silencioso = opciones?.silencioso === true;
+  if (!silencioso) cargandoEncuestas.value = true;
   try {
     const response = await backendApi.get('/surveys', {
       params: filtroDependencia.value ? { dependency_id: filtroDependencia.value } : {},
@@ -786,9 +815,12 @@ async function cargarEncuestas() {
   } catch (error) {
     console.error('Error cargando encuestas:', error);
   } finally {
-    cargandoEncuestas.value = false;
+    if (!silencioso) cargandoEncuestas.value = false;
   }
 }
+
+// Mantiene la lista al día sin recargar la página
+usePolling(() => cargarEncuestas({ silencioso: true }), 15000);
 
 const refrescandoId = ref(null);
 const duplicandoId = ref(null);
@@ -923,6 +955,7 @@ const incluirSubdependencias = ref(false);
 const resumenOrganizacion = ref(null);
 const cargandoOrganizacion = ref(false);
 const invitandoOrganizacion = ref(false);
+import usePolling from '@/composables/usePolling';
 
 async function cargarResumenOrganizacion() {
   if (!encuestaDistribucion.value) return;
@@ -996,17 +1029,28 @@ const dialogPlantilla = ref(false);
 const guardandoPlantilla = ref(false);
 const errorPlantilla = ref(null);
 const encuestaPlantilla = ref(null);
-const plantillaForm = ref({ name: '', description: '', is_public: false });
+const plantillaForm = ref({ name: '', description: '', is_public: false, survey_category_id: null });
+const categoriasPlantilla = ref([]);
 
-function abrirGuardarPlantilla(survey) {
+async function abrirGuardarPlantilla(survey) {
   encuestaPlantilla.value = survey;
   plantillaForm.value = {
     name: survey.title,
     description: survey.description || '',
     is_public: false,
+    survey_category_id: survey.survey_category_id ?? null,
   };
   errorPlantilla.value = null;
   dialogPlantilla.value = true;
+
+  if (!categoriasPlantilla.value.length) {
+    try {
+      const { data } = await backendApi.get('/survey-categories');
+      categoriasPlantilla.value = data;
+    } catch {
+      /* el select queda vacío; el servidor usa la categoría de la encuesta */
+    }
+  }
 }
 
 async function guardarPlantilla() {
@@ -1014,6 +1058,10 @@ async function guardarPlantilla() {
     errorPlantilla.value = 'Escribe un nombre para la plantilla.';
     return;
   }
+  if (!plantillaForm.value.survey_category_id) {
+  errorPlantilla.value = 'Selecciona una categoría para la plantilla.';
+  return;
+}
 
   guardandoPlantilla.value = true;
   errorPlantilla.value = null;
@@ -1025,6 +1073,7 @@ async function guardarPlantilla() {
         name: plantillaForm.value.name.trim(),
         description: plantillaForm.value.description?.trim() || null,
         is_public: plantillaForm.value.is_public,
+        survey_category_id: plantillaForm.value.survey_category_id,
       }
     );
     alert.success(response.data.message || 'Plantilla guardada correctamente.');

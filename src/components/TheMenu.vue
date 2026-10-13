@@ -86,6 +86,7 @@
           prepend-icon="mdi-cog"
           title="Ajustes"
           class="sidebar-item"
+          @click="ajustesAbierto = true"
         />
 
         <v-list-item
@@ -96,16 +97,20 @@
         />
       </v-list>
     </template>
+    <AjustesDialog v-model="ajustesAbierto" />
   </v-navigation-drawer>
 </template>
 
 <script setup>
+import { ref } from "vue";
+import AjustesDialog from "@/components/AjustesDialog.vue";
 import useMenu from "@/composables/useMenu";
 import useAuth from "@/composables/useAuth";
 import logoUrl from "@/assets/logo.png";
 
 const { stateSideBar } = useMenu();
 const { logout, hasPermission } = useAuth();
+const ajustesAbierto = ref(false);
 </script>
 
 <style scoped>

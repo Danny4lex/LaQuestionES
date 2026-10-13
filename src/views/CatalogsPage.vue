@@ -11,7 +11,7 @@
 <template>
   <div class="catalogs-page">
     <!-- ================= Hero Header ================= -->
-    <div class="hero">
+    <div class="hero" :class="heroClase('catalogos')">
       <div class="hero__bg" />
       <div class="hero__content">
         <div class="hero__text">
@@ -94,6 +94,9 @@
 import { ref } from 'vue';
 import CatalogSimpleCrud from '@/components/catalogs/CatalogSimpleCrud.vue';
 import OrganizationalUnitsTree from '@/components/catalogs/OrganizationalUnitsTree.vue';
+import useHeroStyle from '@/composables/useHeroStyle';
+
+const { heroClase } = useHeroStyle();
 
 const tab = ref('categorias');
 </script>
