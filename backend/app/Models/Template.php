@@ -19,6 +19,8 @@ class Template extends Model
         'description',
         'is_public',
         'user_id',
+        'dependency_id',
+        'survey_category_id',
     ];
 
     protected $casts = [

@@ -330,7 +330,7 @@
             <v-col cols="12" md="4">
               <v-select
                 v-model="dependenciaId"
-                :items="dependencias"
+                :items="esAdminDeEncuestas ? dependencias : dependencias.filter(d => d.id === miDependenciaId)"
                 item-title="name"
                 item-value="id"
                 label="Dependencia"
@@ -338,7 +338,7 @@
                 density="compact"
                 hide-details
                 class="input-field"
-                :disabled="esEdicion"
+                :disabled="!esAdminDeEncuestas"
                 :rules="esEdicion ? [] : [v => !!v || 'Selecciona una dependencia']"
               />
             </v-col>
@@ -364,14 +364,34 @@
         <!-- Estructura solo en edición -->
         <template v-if="esEdicion">
           <v-divider class="my-4" />
-          <h5 class="text-section-title mb-3">Estructura de la encuesta</h5>
+
+          <div class="d-flex align-center mb-3">
+            <h5 class="text-section-title">Estructura de la encuesta</h5>
+            <v-spacer />
+            <v-btn size="small" variant="text" color="primary" class="text-button permite-interaccion" @click="secciones.forEach(s => s.plegada = true)">
+              Plegar todas
+            </v-btn>
+            <v-btn size="small" variant="text" color="primary" class="text-button permite-interaccion" @click="secciones.forEach(s => s.plegada = false)">
+              Desplegar todas
+            </v-btn>
+          </div>
 
           <div :class="{ 'campos-bloqueados': !esEditable }">
           <!-- Secciones -->
           <div v-for="(seccion, sIndex) in secciones" :key="sIndex" class="form-section mb-4">
             <v-card variant="flat" border="0" class="rounded-lg pa-3 section-card">
               <v-row class="align-center mb-2">
-                <v-col cols="12" sm="auto">
+                <v-col cols="12" sm="auto" class="d-flex align-center">
+                  <v-btn
+                    icon
+                    variant="text"
+                    size="small"
+                    class="me-1 permite-interaccion"
+                    :title="seccion.plegada ? 'Desplegar sección' : 'Plegar sección'"
+                    @click="seccion.plegada = !seccion.plegada"
+                  >
+                    <v-icon>{{ seccion.plegada ? 'mdi-chevron-down' : 'mdi-chevron-up' }}</v-icon>
+                  </v-btn>
                   <h6 class="text-subsection-title">Sección {{ sIndex + 1 }}</h6>
                 </v-col>
                 <v-col cols="12" sm="6">
@@ -419,6 +439,7 @@
                 </v-col>
               </v-row>
 
+              <div v-show="!seccion.plegada">
               <v-text-field
                 v-model="seccion.description"
                 placeholder="Descripción"
@@ -653,6 +674,7 @@
                   </v-btn>
                 </div>
               </div>
+              </div>
             </v-card>
           </div>
 
@@ -851,6 +873,7 @@ import useAlert from '@/composables/useAlert';
 import useConfirm from '@/composables/useConfirm';
 import ToggleSwitch from '@/components/ToggleSwitch.vue';
 import TimeSelect12h from '@/components/TimeSelect12h.vue';
+import usePolling from '@/composables/usePolling';
 
 const { hasPermission } = useAuth();
 const { alert } = useAlert();
@@ -902,6 +925,37 @@ async function abrirComentarios(seccion) {
   dialogComentarios.value = true;
   await cargarComentarios();
 }
+
+// ===== Actualización en vivo: estado y comentarios =====
+async function revisarCambiosEnVivo() {
+  if (!esEdicion.value || loading.value || guardando.value) return;
+
+  const { data } = await backendApi.get(`/surveys/${route.params.id}/live`);
+
+  // Cambió el estado (por ejemplo, el administrador aprobó o pidió correcciones)
+  if (data.status_id && data.status_id !== estadoId.value) {
+    estadoId.value = data.status_id;
+    alert.success(`El estado de la encuesta cambió a "${data.status?.name ?? ''}".`);
+  }
+
+  // Llegaron o se borraron comentarios en alguna sección
+  for (const seccion of secciones) {
+    if (!seccion.backendId) continue;
+    const total = Number(data.comments?.[seccion.backendId] ?? 0);
+
+    if (total !== (seccion.comentariosCount ?? 0)) {
+      seccion.comentariosCount = total;
+      // Si ese mismo diálogo de comentarios está abierto, se actualiza la lista
+      if (dialogComentarios.value && seccionComentarios.value?.backendId === seccion.backendId) {
+        await cargarComentarios();
+      }
+    }
+  }
+}
+
+usePolling(revisarCambiosEnVivo, 8000);
+
+
 
 async function cargarComentarios() {
   if (!seccionComentarios.value?.backendId) return;
@@ -975,7 +1029,9 @@ const avisoAnonimato = computed(() =>
 const unicaRespuesta = ref(false);
 const categoriaId = ref(null);
 const estadoId = ref(null);
-const dependenciaId = ref(null);
+const esAdminDeEncuestas = hasPermission('surveys.viewAll');
+const miDependenciaId = JSON.parse(localStorage.getItem('survey_profile') || 'null')?.dependency?.id || null;
+const dependenciaId = ref(esAdminDeEncuestas ? null : miDependenciaId);
 const inicioDia = ref(null);
 const inicioHora = ref(null);
 const finDia = ref(null);
@@ -1414,9 +1470,11 @@ async function guardarEncuesta() {
   };
 
   if (!esEdicion.value) {
-    payload.status_id = estadoId.value;
-    payload.dependency_id = dependenciaId.value;
-  }
+  payload.status_id = estadoId.value;
+  payload.dependency_id = dependenciaId.value;
+} else if (esAdminDeEncuestas) {
+  payload.dependency_id = dependenciaId.value;
+}
   guardando.value = true;
   try {
     if (esEdicion.value) {
