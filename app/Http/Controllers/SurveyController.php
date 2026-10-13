@@ -158,6 +158,36 @@ class SurveyController extends Controller
 
         return response()->json($survey->load('sections'), 201);
     }
+// Datos livianos para refrescar la pantalla de edición sin recargarla
+public function live(Request $request, Survey $survey): JsonResponse
+{
+    $user = $request->user();
+    $puedeVerTodas = $user?->role?->hasPermission('surveys.viewAll') ?? false;
+
+    if (
+        !$puedeVerTodas
+        && (int) $survey->dependency_id !== (int) $user?->dependency_id
+        && (int) $survey->user_id !== (int) $user?->id
+    ) {
+        return response()->json(['message' => 'No tienes acceso a esta encuesta.'], 403);
+    }
+
+    $survey->loadMissing('status:id,name,slug');
+
+    $comentarios = \App\Models\SectionComment::where('survey_id', $survey->id)
+        ->selectRaw('section_id, COUNT(*) as total')
+        ->groupBy('section_id')
+        ->pluck('total', 'section_id');
+
+    return response()->json([
+        'status_id'  => $survey->status_id,
+        'status'     => $survey->status,
+        'comments'   => $comentarios,
+        'updated_at' => $survey->updated_at,
+    ]);
+}
+
+
 
     // =====================================================================
     // PANTALLA: CONSTRUCTOR DE ENCUESTAS (VISTA PREVIA / EDICIÓN)
@@ -240,6 +270,14 @@ class SurveyController extends Controller
             'end_date'    => 'nullable|date|after_or_equal:start_date',
             ]);
 
+
+
+            // Solo el administrador puede cambiar la dependencia de la encuesta
+            $esAdmin = $request->user()?->role?->hasPermission('surveys.viewAll') ?? false;
+            if ($esAdmin && $request->filled('dependency_id')) {
+                $request->validate(['dependency_id' => 'exists:organizational_units,id']);
+                $validated['dependency_id'] = (int) $request->input('dependency_id');
+            }
         $survey->update($validated);
 
         if (!empty($validated)) {
@@ -319,6 +357,27 @@ class SurveyController extends Controller
         );
         $this->clearSurveyCache($survey->id);
 
+        // Aviso a los administradores cuando un NO administrador envía a revisión
+try {
+    $esAdmin = $request->user()?->role?->hasPermission('surveys.viewAll') ?? false;
+
+    if ($estadoNuevoObj?->slug === 'review' && !$esAdmin) {
+        $admins = \App\Models\SurveyUser::with('role')->get()
+            ->filter(fn ($u) => $u->role?->hasPermission('surveys.viewAll'));
+
+        foreach ($admins as $admin) {
+            \App\Models\SurveyNotification::create([
+                'user_id'   => $admin->id,
+                'survey_id' => $survey->id,
+                'type'      => 'review_requested',
+                'title'     => 'Encuesta pendiente de revisión',
+                'message'   => "{$request->user()->name} envió «{$survey->title}» a revisión.",
+            ]);
+        }
+    }
+} catch (\Throwable $e) {
+    report($e); // una falla al notificar no debe impedir el cambio de estado
+}
         return response()->json([
             'message'   => 'Estado de la encuesta actualizado correctamente.',
             'status_id' => $survey->status_id,
