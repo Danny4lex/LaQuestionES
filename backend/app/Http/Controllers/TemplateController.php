@@ -24,7 +24,7 @@ class TemplateController extends Controller
     public function index(Request $request): JsonResponse
     {
         $templates = Cache::remember(self::CACHE_KEY_LIST, self::CACHE_TTL, function () {
-            return Template::select('id', 'name', 'description', 'is_public', 'user_id', 'created_at')
+            return Template::select('id', 'name', 'description', 'is_public', 'user_id', 'dependency_id', 'survey_category_id', 'created_at')
                 ->with(['user' => fn($query) => $query->select('id', 'name')])
                 ->orderBy('name')
                 ->get();
@@ -63,11 +63,13 @@ class TemplateController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:800',
             'is_public' => 'required|boolean',
+            'survey_category_id' => 'nullable|exists:survey_categories,id',
         ]);
 
         $template = Template::create([
             ...$validated,
-            'user_id' => $request->user()->id,
+            'user_id'       => $request->user()->id,
+            'dependency_id' => $request->user()->dependency_id,
         ]);
 
         $this->clearCache();
@@ -100,6 +102,7 @@ class TemplateController extends Controller
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string|max:800',
             'is_public'   => 'required|boolean',
+            'survey_category_id' => 'nullable|exists:survey_categories,id',
         ]);
 
         $survey->load([
@@ -109,7 +112,12 @@ class TemplateController extends Controller
         ]);
 
         $template = DB::transaction(function () use ($validated, $user, $survey) {
-            $template = Template::create([...$validated, 'user_id' => $user->id]);
+            $template = Template::create([
+                ...$validated,
+                'user_id'            => $user->id,
+                'dependency_id'      => $survey->dependency_id,
+                'survey_category_id' => $validated['survey_category_id'] ?? $survey->survey_category_id,
+            ]);
 
             $orden = 0; // orden global: secciones en su orden, preguntas dentro de cada una
 
@@ -192,37 +200,68 @@ class TemplateController extends Controller
 
     public function convertToSurvey(Request $request, Template $template): JsonResponse
     {
-
         if (!$template->is_public && !$this->esDuenoOAdmin($request, $template)) {
             return $this->sinAcceso();
         }
+
+        // ============================================================
+        // 1) VALIDACIÓN
+        // 'dependency_id' es nullable: el Encuestador no la elige, la
+        // hereda de su propio usuario. El Administrador sí puede elegirla.
+        // ============================================================
         $validated = $request->validate([
             'survey_category_id' => 'required|exists:survey_categories,id',
             'type_id'            => 'required|exists:types,id',
-            'status_id'          => 'required|exists:statuses,id',
-            'dependency_id'     => 'required|exists:organizational_units,id',
-            'start_date' => 'nullable|date|after_or_equal:today',
-            'end_date'          => 'nullable|date|after_or_equal:start_date',
+            'dependency_id'      => 'nullable|exists:organizational_units,id',
+            'start_date'         => 'nullable|date|after_or_equal:today',
+            'end_date'           => 'nullable|date|after_or_equal:start_date',
         ]);
+
+        // ============================================================
+        // 2) RESOLVER LA DEPENDENCIA
+        // - Administrador (surveys.viewAll) puede elegir en el formulario.
+        // - Encuestador usa SIEMPRE su propia dependencia.
+        // ============================================================
+        $puedeElegirDependencia = $request->user()?->role?->hasPermission('surveys.viewAll') ?? false;
+
+        $dependencyId = ($puedeElegirDependencia && !empty($validated['dependency_id']))
+            ? $validated['dependency_id']
+            : $request->user()?->dependency_id;
+
+        if (!$dependencyId) {
+            return response()->json([
+                'message' => 'Tu usuario no tiene una dependencia asignada; no puedes crear encuestas. Contacta al administrador.'
+            ], 422);
+        }
+
+        // ============================================================
+        // 3) ESTADO INICIAL: siempre Borrador (ya no se pide desde el front)
+        // ============================================================
+        $borrador = \App\Models\Status::where('slug', 'draft')->firstOrFail();
 
         // Carga ansiosa para evitar N+1
         $template->load('questions.options');
 
-        $survey = DB::transaction(function () use ($template, $validated, $request) {
+        // ============================================================
+        // 4) TRANSACCIÓN
+        // $dependencyId y $borrador van en el use() para que lleguen
+        // dentro del closure. El resultado se guarda en $newSurvey.
+        // ============================================================
+        $newSurvey = DB::transaction(function () use ($template, $validated, $request, $dependencyId, $borrador) {
             $newSurvey = Survey::create([
                 'title'              => $template->name,
                 'description'        => $template->description,
                 'survey_category_id' => $validated['survey_category_id'],
                 'type_id'            => $validated['type_id'],
-                'status_id'          => $validated['status_id'],
-                'dependency_id'     => $validated['dependency_id'],
-                'user_id'           => $request->user()->id,
-                'start_date'        => $validated['start_date'] ?? null,
-                'end_date'          => $validated['end_date'] ?? null,
+                'status_id'          => $borrador->id,
+                'dependency_id'      => $dependencyId,
+                'user_id'            => $request->user()->id,
+                'start_date'         => $validated['start_date'] ?? null,
+                'end_date'           => $validated['end_date'] ?? null,
                 'is_single_response' => false,
             ]);
 
-                        // Las secciones se reconstruyen con el nombre que guardó cada
+            // Las secciones se reconstruyen con el nombre que guardó cada
             // pregunta; las plantillas antiguas (sin nombre) van a una sola
             // "Sección General".
             $secciones = [];
@@ -273,17 +312,21 @@ class TemplateController extends Controller
             return $newSurvey;
         });
 
+        // ============================================================
+        // 5) LOG + RESPUESTA
+        // Usa $newSurvey (el resultado de la transacción), no $survey.
+        // ============================================================
         $this->changeLogService->log(
             $request,
             'Survey',
             'Creación',
-            "Se creó la encuesta \"{$survey->title}\" a partir de la plantilla \"{$template->name}\".",
-            $survey->id
+            "Se creó la encuesta \"{$newSurvey->title}\" a partir de la plantilla \"{$template->name}\".",
+            $newSurvey->id
         );
 
         return response()->json([
             'message'   => 'Encuesta generada exitosamente desde la plantilla.',
-            'survey_id' => $survey->id
+            'survey_id' => $newSurvey->id,
         ], 201);
     }
 
