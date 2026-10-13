@@ -24,6 +24,7 @@ use App\Http\Controllers\ChangeLogController;
 use App\Http\Controllers\SessionLogController;
 use App\Http\Controllers\SurveyPublicController;
 use App\Http\Controllers\SurveyStructureController;
+use App\Http\Controllers\SurveyNotificationController;
 
 /*
 |============================================================================
@@ -131,6 +132,10 @@ Route::middleware(['auth:api', 'auth.external'])->group(function () {
         ->middleware('permission:surveys.create');
     Route::patch('/surveys/{survey}/status', [SurveyController::class, 'changeStatus']);
     Route::put('/surveys/{survey}/structure', [SurveyStructureController::class, 'sync']);
+    Route::get('/surveys/{survey}/live', [SurveyController::class, 'live']);
+    Route::get('/notifications', [SurveyNotificationController::class, 'index']);
+    Route::patch('/notifications/read-all', [SurveyNotificationController::class, 'readAll']);
+    Route::patch('/notifications/{notification}/read', [SurveyNotificationController::class, 'read']);
     Route::post('/surveys', [SurveyController::class, 'store'])
         ->middleware('permission:surveys.create');
     Route::delete('/surveys/{survey}', [SurveyController::class, 'destroy'])

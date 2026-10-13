@@ -1,7 +1,7 @@
 <template>
   <div class="participants-page">
     <!-- ================= Hero Header ================= -->
-    <div class="hero">
+    <div class="hero" :class="heroClase('grupos')">
       <div class="hero__bg" />
       <div class="hero__content">
         <div class="hero__text">
@@ -331,6 +331,9 @@ const cargandoParticipantes = ref(false);
 const nuevoParticipanteEmail = ref('');
 const agregandoParticipante = ref(false);
 const errorParticipante = ref(null);
+import useHeroStyle from '@/composables/useHeroStyle';
+
+const { heroClase } = useHeroStyle();
 
 async function abrirParticipantes(grupo) {
   grupoSeleccionado.value = grupo;

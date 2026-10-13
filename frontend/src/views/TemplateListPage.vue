@@ -1,7 +1,7 @@
 <template>
   <div class="plantillas-page">
     <!-- ================= Hero Header ================= -->
-    <div class="hero">
+    <div class="hero" :class="heroClase('plantillas')">
       <div class="hero__bg" />
       <div class="hero__content">
         <div class="hero__text">
@@ -29,6 +29,23 @@
       {{ mensajeExito }}
     </v-alert>
 
+    <!-- Filtros -->
+    <v-row dense class="mb-2">
+      <v-col cols="12" sm="4">
+        <v-select
+          v-model="filtroCategoria"
+          :items="categorias"
+          item-title="name"
+          item-value="id"
+          label="Filtrar por categoría"
+          variant="outlined"
+          density="compact"
+          clearable
+          hide-details
+        />
+      </v-col>
+    </v-row>
+
     <!-- Cargando -->
     <div v-if="loading" class="text-center py-8">
       <v-progress-circular indeterminate color="primary" />
@@ -44,7 +61,7 @@
     <!-- Listado -->
     <v-row v-else dense>
       <v-col
-        v-for="plantilla in plantillas"
+        v-for="plantilla in plantillasFiltradas"
         :key="plantilla.id"
         cols="12"
         sm="6"
@@ -109,6 +126,19 @@
               />
             </v-col>
             <v-col cols="12">
+              <v-select
+                v-model="nuevaForm.survey_category_id"
+                :items="categorias"
+                item-title="name"
+                item-value="id"
+                label="Categoría (opcional)"
+                variant="outlined"
+                density="compact"
+                clearable
+                hide-details
+              />
+            </v-col>
+            <v-col cols="12">
               <v-checkbox
                 v-model="nuevaForm.is_public"
                 label="Plantilla pública"
@@ -148,7 +178,8 @@
             <v-col cols="12">
               <v-select
                 v-model="usarForm.dependency_id"
-                :items="dependencias"
+                :items="hasPermission('surveys.viewAll') ? dependencias : dependencias.filter(d => d.id === miDependenciaId)"
+                :disabled="!hasPermission('surveys.viewAll')"
                 item-title="name"
                 item-value="id"
                 label="Dependencia responsable"
@@ -184,18 +215,7 @@
               />
             </v-col>
 
-            <v-col cols="12" sm="6">
-              <v-select
-                v-model="usarForm.status_id"
-                :items="estados"
-                item-title="name"
-                item-value="id"
-                label="Estado inicial"
-                variant="outlined"
-                density="compact"
-                hide-details
-              />
-            </v-col>
+            
 
             <v-col cols="12" sm="6">
               <v-text-field
@@ -219,7 +239,9 @@
               />
             </v-col>
           </v-row>
-
+          <p class="text-body-small text-medium-emphasis mt-3 mb-0">
+            La encuesta se creará en estado <strong>Borrador</strong>.
+          </p>
           <v-alert v-if="dialogUsarError" type="error" variant="tonal" class="mt-3">
             {{ dialogUsarError }}
           </v-alert>
@@ -302,11 +324,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import backendApi from '@/services/backendApi';
+import useAuth from '@/composables/useAuth';
+import useHeroStyle from '@/composables/useHeroStyle';
 
 const router = useRouter();
+const { hasPermission } = useAuth();
+const { heroClase } = useHeroStyle();
+const miDependenciaId =
+  JSON.parse(localStorage.getItem('survey_profile') || 'null')?.dependency?.id || null;
 
 const plantillas = ref([]);
 const loading = ref(true);
@@ -322,6 +350,7 @@ const nuevaForm = reactive({
   name: '',
   description: '',
   is_public: true,
+  survey_category_id: null,
 });
 
 // ----- Modal usar plantilla -----
@@ -335,11 +364,19 @@ const categorias = ref([]);
 const tipos = ref([]);
 const estados = ref([]);
 
+
+const filtroCategoria = ref(null);
+
+const plantillasFiltradas = computed(() =>
+  plantillas.value.filter(p =>
+    !filtroCategoria.value || p.survey_category_id === filtroCategoria.value
+  )
+);
+
 const usarForm = reactive({
   dependency_id: null,
   survey_category_id: null,
   type_id: null,
-  status_id: null,
   start_date: null,
   end_date: null,
 });
@@ -352,6 +389,7 @@ function abrirModalNueva() {
   nuevaForm.name = '';
   nuevaForm.description = '';
   nuevaForm.is_public = true;
+  nuevaForm.survey_category_id = null;
   dialogNueva.value = true;
 }
 
@@ -374,6 +412,7 @@ async function crearPlantilla() {
       name: nuevaForm.name,
       description: nuevaForm.description,
       is_public: nuevaForm.is_public,
+      survey_category_id: nuevaForm.survey_category_id,
     });
 
     dialogNueva.value = false;
@@ -443,10 +482,10 @@ function usarDesdePreview() {
 async function abrirModalUsar(plantilla) {
   plantillaSeleccionada.value = plantilla;
   dialogUsarError.value = null;
-  usarForm.dependency_id = null;
+  usarForm.dependency_id = hasPermission('surveys.viewAll') ? null : miDependenciaId;
   usarForm.survey_category_id = null;
   usarForm.type_id = null;
-  usarForm.status_id = null;
+  
   usarForm.start_date = null;
   usarForm.end_date = null;
   dialogUsar.value = true;
@@ -483,7 +522,7 @@ async function cargarCatalogos() {
 async function convertir() {
   if (!plantillaSeleccionada.value) return;
 
-  if (!usarForm.dependency_id || !usarForm.survey_category_id || !usarForm.type_id || !usarForm.status_id) {
+  if (!usarForm.dependency_id || !usarForm.survey_category_id || !usarForm.type_id) {
     dialogUsarError.value = 'Todos los campos obligatorios deben estar completos.';
     return;
   }
@@ -498,7 +537,6 @@ async function convertir() {
         dependency_id: usarForm.dependency_id,
         survey_category_id: usarForm.survey_category_id,
         type_id: usarForm.type_id,
-        status_id: usarForm.status_id,
         start_date: usarForm.start_date || null,
         end_date: usarForm.end_date || null,
       }
@@ -527,6 +565,7 @@ async function cargarPlantillas() {
 }
 
 onMounted(async () => {
+  cargarCatalogos(); // los filtros necesitan dependencias y categorías desde el inicio
   try {
     await cargarPlantillas();
   } catch (e) {

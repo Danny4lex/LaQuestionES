@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-page">
     <!-- ================= Hero Header ================= -->
-    <div class="hero">
+    <div class="hero" :class="heroClase('dashboard')">
       <div class="hero__bg" />
       <div class="hero__content">
         <div class="hero__text">
@@ -16,10 +16,11 @@
 
         <div class="hero__actions">
           <v-btn
-            color="primary"
+            
+            color="white"
             variant="flat"
             prepend-icon="mdi-plus"
-            class="text-button"
+            class="text-button hero__cta"
             @click="goToNewSurvey"
           >
             Nueva encuesta
@@ -189,7 +190,9 @@ import RankingList from "@/components/charts/RankingList.vue";
 import RecentSurveys from "@/components/charts/RecentSurveys.vue";
 import backendApi from "@/services/backendApi";
 import useAuth from "@/composables/useAuth";
+import useHeroStyle from '@/composables/useHeroStyle';
 
+const { heroClase } = useHeroStyle();
 const router = useRouter();
 const { user } = useAuth();
 const nombreUsuario = computed(() => user.value?.name || 'Usuario');

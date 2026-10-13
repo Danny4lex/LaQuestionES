@@ -161,4 +161,44 @@
  .warning {
    color: $status-finalizado;
  }
- 
+ /* ===== Estilos de cabecera (hero) elegibles desde Ajustes ===== */
+.hero.hero--degradado { background: linear-gradient(135deg, #063456 0%, #2D52A7 100%) !important; border: none !important; color: #fff !important; }
+.hero.hero--solido    { background: #2D52A7 !important; border: none !important; color: #fff !important; }
+.hero.hero--claro     { background: linear-gradient(135deg, #EDF2FF 0%, #F4F6FD 60%, #E8F0FB 100%) !important; border: 1px solid #E3EBF5 !important; color: #063456 !important; }
+
+.hero.hero--degradado .hero__bg,
+.hero.hero--solido .hero__bg {
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.10), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(255, 255, 255, 0.06), transparent 40%) !important;
+}
+.hero.hero--claro .hero__bg {
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(72, 128, 255, 0.18), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(72, 128, 255, 0.10), transparent 40%) !important;
+}
+
+/* Textos sobre fondo azul */
+.hero.hero--degradado .hero__title,
+.hero.hero--solido .hero__title { color: #fff !important; }
+.hero.hero--degradado .hero__sub, .hero.hero--degradado .hero__subtitle,
+.hero.hero--solido .hero__sub,    .hero.hero--solido .hero__subtitle { color: #fff !important; opacity: 0.85; }
+.hero.hero--degradado .hero__eyebrow,
+.hero.hero--solido .hero__eyebrow { color: #fff !important; background: transparent !important; padding: 0 !important; opacity: 0.75; }
+
+/* Textos sobre fondo claro */
+.hero.hero--claro .hero__title { color: #063456 !important; }
+.hero.hero--claro .hero__sub, .hero.hero--claro .hero__subtitle { color: #4a5b6b !important; opacity: 1; }
+.hero.hero--claro .hero__eyebrow {
+  display: inline-block;
+  color: #4880FF !important;
+  background: rgba(72, 128, 255, 0.10) !important;
+  padding: 4px 10px !important;
+  border-radius: 999px;
+  opacity: 1;
+}
+
+/* Botón principal de la cabecera */
+.hero.hero--degradado .hero__cta,
+.hero.hero--solido .hero__cta { background: #fff !important; color: #063456 !important; }
+.hero.hero--claro .hero__cta  { background: #4880FF !important; color: #fff !important; }
