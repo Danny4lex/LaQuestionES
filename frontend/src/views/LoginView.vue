@@ -27,6 +27,7 @@ import BaseInput from "../components/base-components/BaseInput.vue";
 import { useRouter } from "vue-router";
 import useAuth from "@/composables/useAuth.js"
 import useAlert from "@/composables/useAlert.js"
+import { limpiarSesion } from "@/utils/session";
 
 const router = useRouter();
 const { user, isLoggedIn, login, hasPermission } = useAuth();
@@ -68,7 +69,7 @@ const loginUser = async () => {
     // rechazaría con 403 en cada llamada.
     if (!hasPermission('admin.access')) {
       alert.error('Tu cuenta solo puede responder encuestas. No tiene acceso al panel administrativo.');
-      localStorage.clear();
+      limpiarSesion();
       isLoading.value = false;
       return;
     }
