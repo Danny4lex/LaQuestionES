@@ -139,13 +139,18 @@ class SurveyStructureController extends Controller
             return $respuesta;
         });
 
-        $this->changeLogService->log(
-            $request,
-            'Survey',
-            'Edición de estructura',
-            'Se actualizaron las secciones y preguntas de la encuesta.',
-            $survey->id
-        );
+        $registrar = !$request->boolean('auto')
+    || Cache::add("autosave_struct_log_{$survey->id}_{$request->user()->id}", true, now()->addMinutes(10));
+
+            if ($registrar) {
+                $this->changeLogService->log(
+                    $request,
+                    'Survey',
+                    'Edición de estructura',
+                    'Se actualizaron las secciones y preguntas de la encuesta.',
+                    $survey->id
+                );
+            }
 
         Cache::forget("survey_detail_{$survey->id}_full");
         Cache::forget("survey_detail_{$survey->id}_anon");

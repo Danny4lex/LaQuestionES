@@ -39,6 +39,15 @@
         {{ errorMsg }}
       </v-alert>
 
+      <div v-if="esEdicion && esEditable" class="text-caption text-medium-emphasis mb-2">
+        <template v-if="autoguardando">
+          <v-icon size="14">mdi-sync</v-icon> Guardando cambios...
+        </template>
+        <template v-else-if="ultimoAutoguardado">
+          <v-icon size="14">mdi-check</v-icon> Guardado automáticamente a las {{ horaAutoguardado }}
+        </template>
+      </div>
+
       <!-- Botones superiores -->
       <v-row dense class="mb-4">
         <v-col cols="12" sm="auto">
@@ -865,8 +874,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import backendApi from '@/services/backendApi';
 import useAuth from '@/composables/useAuth';
 import useAlert from '@/composables/useAlert';
@@ -1335,6 +1344,7 @@ async function cargarEncuesta(id) {
   finHora.value = fin.hora;
 
   cargarEstructura(survey);
+  instantaneaGuardada = instantanea.value;
 }
 
 function separarFechaHora(iso) {
@@ -1352,13 +1362,22 @@ function unirFechaHora(dia, hora, horaPorDefecto) {
   return `${dia} ${hora || horaPorDefecto}`;
 }
 
-async function syncStructure(surveyId) {
+async function syncStructure(surveyId, silencioso = false) {
+  // Foto de lo que se envía: los IDs devueltos se asignan al objeto correcto
+  const foto = secciones.map(seccion => ({
+    seccion,
+    preguntas: seccion.questions.map(pregunta => ({
+      pregunta,
+      opciones: mostrarOpciones(pregunta.type) ? [...pregunta.options] : [],
+    })),
+  }));
+
   const payload = {
-    sections: secciones.map(seccion => ({
+    sections: foto.map(({ seccion, preguntas }) => ({
       id: seccion.backendId || null,
       name: seccion.name,
       description: seccion.description || null,
-      questions: seccion.questions.map(pregunta => ({
+      questions: preguntas.map(({ pregunta, opciones }) => ({
         id: pregunta.backendId || null,
         type: labelTypeMap[pregunta.type] || 'texto',
         statement: pregunta.statement,
@@ -1366,9 +1385,7 @@ async function syncStructure(surveyId) {
         max_length: ['Texto corto', 'Texto largo'].includes(pregunta.type)
           ? (pregunta.maxLength || null)
           : null,
-        options: mostrarOpciones(pregunta.type)
-          ? pregunta.options.map(o => ({ id: o.backendId || null, text: o.text }))
-          : [],
+        options: opciones.map(o => ({ id: o.backendId || null, text: o.text })),
       })),
     })),
     deleted: {
@@ -1378,23 +1395,27 @@ async function syncStructure(surveyId) {
     },
   };
 
-  const { data } = await backendApi.put(`/surveys/${surveyId}/structure`, payload);
+  const { data } = await backendApi.put(
+    `/surveys/${surveyId}/structure`,
+    payload,
+    { params: silencioso ? { auto: 1 } : {} }
+  );
 
-  // Asigna los IDs que creó el servidor a lo que se acaba de guardar
   data.sections.forEach((s, i) => {
-    secciones[i].backendId = s.id;
+    foto[i].seccion.backendId = s.id;
     s.questions.forEach((q, j) => {
-      const pregunta = secciones[i].questions[j];
+      const { pregunta, opciones } = foto[i].preguntas[j];
       pregunta.backendId = q.id;
       q.options.forEach((optionId, k) => {
-        pregunta.options[k].backendId = optionId;
+        opciones[k].backendId = optionId;
       });
     });
   });
 
-  deletedOptions.value = [];
-  deletedQuestions.value = [];
-  deletedSections.value = [];
+  // Solo se limpian las eliminaciones que realmente se enviaron
+  deletedOptions.value = deletedOptions.value.filter(id => !payload.deleted.options.includes(id));
+  deletedQuestions.value = deletedQuestions.value.filter(id => !payload.deleted.questions.includes(id));
+  deletedSections.value = deletedSections.value.filter(id => !payload.deleted.sections.includes(id));
 }
 
 async function enviarRevision() {
@@ -1406,6 +1427,10 @@ async function enviarRevision() {
     errorMsg.value = 'No se encontró el estado "En revisión".';
     return;
   }
+
+  // Guarda primero para que quien revisa vea siempre la última versión
+  const guardada = await guardarEncuesta({ sinMensaje: true });
+  if (!guardada) return; // guardarEncuesta ya muestra el motivo en pantalla
 
   try {
     const response = await backendApi.patch(`/surveys/${route.params.id}/status`, {
@@ -1439,24 +1464,126 @@ async function cambiarEstadoPorSlug(slug, mensajeExito) {
   }
 }
 
-async function guardarEncuesta() {
-  if (guardando.value) return;
-  errorMsg.value = null;
+// ===== Guardado automático =====
+const autoguardando = ref(false);
+const ultimoAutoguardado = ref(null);
+let temporizadorAuto = null;
+let instantaneaGuardada = null; // se fija al terminar de cargar la encuesta
 
-  const { valid } = await formRef.value.validate();
-      if (!valid) {
-        errorMsg.value = 'Por favor completa los campos obligatorios.';
-        return;
-      }
+// "Foto" de lo que el usuario edita (sin IDs ni estado de plegado)
+const instantanea = computed(() => JSON.stringify({
+  t: titulo.value,
+  d: descripcion.value,
+  tipo: tipoId.value,
+  cat: categoriaId.value,
+  an: modoAnonimato.value,
+  u: unicaRespuesta.value,
+  dep: dependenciaId.value,
+  i: [inicioDia.value, inicioHora.value],
+  f: [finDia.value, finHora.value],
+  s: secciones.map(s => ({
+    n: s.name,
+    d: s.description,
+    q: s.questions.map(q => ({
+      t: q.type,
+      s: q.statement,
+      m: q.isMandatory,
+      l: q.maxLength,
+      o: (q.options || []).map(o => o.text),
+    })),
+  })),
+}));
 
-      if (inicioDia.value && inicioDia.value < hoy && inicioDia.value !== inicioOriginal.value) {
-      errorMsg.value = 'La fecha de inicio no puede ser anterior a hoy.';
-      return;
+const horaAutoguardado = computed(() =>
+  ultimoAutoguardado.value
+    ? ultimoAutoguardado.value.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })
+    : ''
+);
+
+// Solo se autoguarda cuando todo lo escrito está completo (evita errores a medias)
+function estructuraCompleta() {
+  return secciones.every(s =>
+    s.name?.trim() &&
+    s.questions.every(q =>
+      q.statement?.trim() &&
+      (!mostrarOpciones(q.type) || q.options.every(o => o.text?.trim()))
+    )
+  );
+}
+
+async function autoguardar() {
+  if (!esEdicion.value || !esEditable.value || guardando.value || autoguardando.value) return;
+
+  const antes = instantanea.value;
+  if (instantaneaGuardada === null || antes === instantaneaGuardada) return;
+
+  autoguardando.value = true;
+  const ok = await guardarEncuesta({ silencioso: true });
+  autoguardando.value = false;
+
+  if (ok) {
+    instantaneaGuardada = antes;
+    ultimoAutoguardado.value = new Date();
+  }
+
+  // Si el usuario siguió escribiendo mientras guardaba (o falló), se reintenta
+  if (instantanea.value !== instantaneaGuardada) {
+    clearTimeout(temporizadorAuto);
+    temporizadorAuto = setTimeout(autoguardar, ok ? 3000 : 15000);
+  }
+}
+
+watch(instantanea, () => {
+  if (!esEdicion.value || loading.value || !esEditable.value) return;
+  clearTimeout(temporizadorAuto);
+  temporizadorAuto = setTimeout(autoguardar, 10000); // 10 s después del último cambio
+});
+
+// Si sales de la pantalla con cambios pendientes, se guardan antes de irte
+onBeforeRouteLeave(async () => {
+  clearTimeout(temporizadorAuto);
+  if (esEdicion.value && esEditable.value && instantanea.value !== instantaneaGuardada) {
+    await autoguardar();
+  }
+});
+
+onBeforeUnmount(() => clearTimeout(temporizadorAuto));
+
+async function guardarEncuesta(opciones) {
+  const silencioso = opciones?.silencioso === true;   // autoguardado
+  const sinMensaje = opciones?.sinMensaje === true;   // guardado manual sin aviso de éxito
+
+  // Guardado manual: si justo hay un autoguardado en curso, espera a que termine
+  if (!silencioso) {
+    while (autoguardando.value) await new Promise(r => setTimeout(r, 150));
+  }
+  if (guardando.value) return false;
+
+  if (!silencioso) errorMsg.value = null;
+
+  if (silencioso) {
+    // Sin resaltar campos en rojo: solo guarda si lo mínimo está completo
+    if (!titulo.value?.trim() || !tipoId.value || !categoriaId.value) return false;
+    if (!estructuraCompleta()) return false;
+  } else {
+    const { valid } = await formRef.value.validate();
+    if (!valid) {
+      errorMsg.value = 'Por favor completa los campos obligatorios.';
+      return false;
     }
-    if (inicioDia.value && finDia.value && finDia.value < inicioDia.value) {
-      errorMsg.value = 'La fecha de fin no puede ser anterior a la de inicio.';
-      return;
+  }
+
+  // Fechas
+  const inicioInvalido = inicioDia.value && inicioDia.value < hoy && inicioDia.value !== inicioOriginal.value;
+  const finInvalido = inicioDia.value && finDia.value && finDia.value < inicioDia.value;
+  if (inicioInvalido || finInvalido) {
+    if (!silencioso) {
+      errorMsg.value = inicioInvalido
+        ? 'La fecha de inicio no puede ser anterior a hoy.'
+        : 'La fecha de fin no puede ser anterior a la de inicio.';
     }
+    return false;
+  }
 
   const payload = {
     title: titulo.value,
@@ -1470,27 +1597,29 @@ async function guardarEncuesta() {
   };
 
   if (!esEdicion.value) {
-  payload.status_id = estadoId.value;
-  payload.dependency_id = dependenciaId.value;
-} else if (esAdminDeEncuestas) {
-  payload.dependency_id = dependenciaId.value;
-}
-  guardando.value = true;
+    payload.status_id = estadoId.value;
+    payload.dependency_id = dependenciaId.value;
+  } else if (esAdminDeEncuestas) {
+    payload.dependency_id = dependenciaId.value;
+  }
+
+  if (!silencioso) guardando.value = true;
   try {
     if (esEdicion.value) {
       const id = route.params.id;
-      await backendApi.put(`/surveys/${id}`, payload);
-      await syncStructure(id);
-      alert.success('Encuesta guardada correctamente.');
+      await backendApi.put(`/surveys/${id}`, payload, { params: silencioso ? { auto: 1 } : {} });
+      await syncStructure(id, silencioso);
+      if (!silencioso && !sinMensaje) alert.success('Encuesta guardada correctamente.');
     } else {
       const response = await backendApi.post('/surveys', payload);
-      const nuevaId = response.data.id;
-      router.push(`/surveys/${nuevaId}/edit`);
+      router.push(`/surveys/${response.data.id}/edit`);
     }
+    return true;
   } catch (e) {
-    errorMsg.value = e.response?.data?.message || 'No se pudo guardar la encuesta.';
+    if (!silencioso) errorMsg.value = e.response?.data?.message || 'No se pudo guardar la encuesta.';
+    return false;
   } finally {
-    guardando.value = false;
+    if (!silencioso) guardando.value = false;
   }
 }
 
