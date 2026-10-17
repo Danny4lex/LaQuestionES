@@ -288,15 +288,13 @@
 
     <!-- Diálogo historial de cambios -->
     <v-dialog v-model="dialogHistorial" max-width="640">
-      <v-card>
-        <v-card-title class="text-h6">
-          Historial de cambios
-          <div class="text-body-small text-medium-emphasis font-weight-regular">
-            {{ encuestaHistorial?.title }}
-          </div>
+      <v-card class="dialog-card">
+        <v-card-title class="dialog-header">
+          <div class="dialog-title">Historial de cambios</div>
+          <div class="dialog-subtitle">{{ encuestaHistorial?.title }}</div>
         </v-card-title>
 
-        <v-card-text style="max-height: 480px; overflow-y: auto;">
+        <v-card-text class="dialog-body" style="max-height: 480px; overflow-y: auto;">
           <div v-if="cargandoHistorial" class="text-center py-8">
             <v-progress-circular indeterminate color="primary" />
           </div>
@@ -318,7 +316,7 @@
             </v-timeline-item>
           </v-timeline>
         </v-card-text>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="dialog-actions">
           <v-spacer />
           <v-btn variant="outlined" color="secondary" class="text-button" @click="dialogHistorial = false">
             Cerrar
@@ -514,9 +512,12 @@
 
     <!-- Diálogo: guardar la encuesta como plantilla -->
     <v-dialog v-model="dialogPlantilla" max-width="480" persistent>
-      <v-card>
-        <v-card-title class="text-h6">Guardar como plantilla</v-card-title>
-        <v-card-text>
+      <v-card class="dialog-card">
+        <v-card-title class="dialog-header">
+          <div class="dialog-title">Guardar como plantilla</div>
+          <div class="dialog-subtitle">{{ encuestaPlantilla?.title }}</div>
+        </v-card-title>
+        <v-card-text class="dialog-body">
           <v-text-field
             v-model="plantillaForm.name"
             label="Nombre de la plantilla"
@@ -561,7 +562,7 @@
             {{ errorPlantilla }}
           </v-alert>
         </v-card-text>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="dialog-actions">
           <v-spacer />
           <v-btn variant="outlined" color="secondary" class="text-button" :disabled="guardandoPlantilla" @click="dialogPlantilla = false">
             Cancelar
@@ -1708,6 +1709,58 @@ onMounted(async () => {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 4px 0;
+}
+
+/* ============================================= */
+/* DIÁLOGOS — estilo unificado con el hero       */
+/* ============================================= */
+.dialog-card {
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(6, 52, 86, 0.22) !important;
+}
+
+.dialog-card :deep(.v-card-title.dialog-header) {
+  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%) !important;
+  padding: 20px 24px !important;
+  display: block !important;
+  color: #ffffff !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+
+.dialog-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.2;
+  color: #ffffff;
+  margin: 0;
+}
+
+.dialog-subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #ffffff;
+  opacity: 0.85;
+  margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialog-card :deep(.v-card-text.dialog-body) {
+  background-color: #ffffff;
+  padding: 20px 24px !important;
+}
+
+.dialog-card :deep(.v-card-actions.dialog-actions) {
+  padding: 14px 24px 18px !important;
+  background-color: #ffffff;
+  border-top: 1px solid #E3EBF5;
 }
 
 /* ============================================= */

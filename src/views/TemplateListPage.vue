@@ -102,9 +102,12 @@
 
     <!-- Modal para crear plantilla -->
     <v-dialog v-model="dialogNueva" max-width="500" persistent>
-      <v-card>
-        <v-card-title class="text-h6">Nueva plantilla</v-card-title>
-        <v-card-text>
+      <v-card class="dialog-card">
+        <v-card-title class="dialog-header">
+          <div class="dialog-title">Nueva plantilla</div>
+          <div class="dialog-subtitle">Crea una plantilla reutilizable</div>
+        </v-card-title>
+        <v-card-text class="dialog-body">
           <v-row dense>
             <v-col cols="12">
               <v-text-field
@@ -151,12 +154,12 @@
             {{ dialogNuevaError }}
           </v-alert>
         </v-card-text>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="dialog-actions">
           <v-spacer />
-          <v-btn variant="outlined" color="secondary" @click="cerrarModalNueva">
+          <v-btn variant="outlined" color="secondary" class="text-button" @click="cerrarModalNueva">
             Cancelar
           </v-btn>
-          <v-btn color="primary" :loading="creando" @click="crearPlantilla">
+          <v-btn color="primary" class="text-button" :loading="creando" @click="crearPlantilla">
             Guardar
           </v-btn>
         </v-card-actions>
@@ -165,15 +168,12 @@
 
     <!-- Modal para convertir plantilla en encuesta -->
     <v-dialog v-model="dialogUsar" max-width="550" persistent>
-      <v-card>
-        <v-card-title class="text-h6">
-          Convertir plantilla en encuesta
+      <v-card class="dialog-card">
+        <v-card-title class="dialog-header">
+          <div class="dialog-title">Convertir plantilla en encuesta</div>
+          <div class="dialog-subtitle">{{ plantillaSeleccionada?.name }}</div>
         </v-card-title>
-        <v-card-text>
-          <p class="text-body-small text-medium-emphasis mb-4">
-            {{ plantillaSeleccionada?.name }}
-          </p>
-
+        <v-card-text class="dialog-body">
           <v-row dense>
             <v-col cols="12">
               <v-select
@@ -215,8 +215,6 @@
               />
             </v-col>
 
-            
-
             <v-col cols="12" sm="6">
               <v-text-field
                 v-model="usarForm.start_date"
@@ -247,12 +245,12 @@
           </v-alert>
         </v-card-text>
 
-        <v-card-actions class="pa-4">
+        <v-card-actions class="dialog-actions">
           <v-spacer />
-          <v-btn variant="outlined" color="secondary" @click="cerrarModalUsar">
+          <v-btn variant="outlined" color="secondary" class="text-button" @click="cerrarModalUsar">
             Cancelar
           </v-btn>
-          <v-btn color="primary" :loading="convirtiendo" @click="convertir">
+          <v-btn color="primary" class="text-button" :loading="convirtiendo" @click="convertir">
             Convertir
           </v-btn>
         </v-card-actions>
@@ -685,4 +683,56 @@ onMounted(async () => {
   border: 1px solid #D2D9DD; border-radius: 6px; color: #374957;
 }
 .preview-field-hint { color: #7a8794; font-size: 13px; font-style: italic; margin: 0; }
+
+/* ============================================= */
+/* DIÁLOGOS — estilo unificado con el hero       */
+/* ============================================= */
+.dialog-card {
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(6, 52, 86, 0.22) !important;
+}
+
+.dialog-card :deep(.v-card-title.dialog-header) {
+  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%) !important;
+  padding: 20px 24px !important;
+  display: block !important;
+  color: #ffffff !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+
+.dialog-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.2;
+  color: #ffffff;
+  margin: 0;
+}
+
+.dialog-subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #ffffff;
+  opacity: 0.85;
+  margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialog-card :deep(.v-card-text.dialog-body) {
+  background-color: #ffffff;
+  padding: 20px 24px !important;
+}
+
+.dialog-card :deep(.v-card-actions.dialog-actions) {
+  padding: 14px 24px 18px !important;
+  background-color: #ffffff;
+  border-top: 1px solid #E3EBF5;
+}
 </style>

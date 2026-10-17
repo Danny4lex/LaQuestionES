@@ -12,7 +12,7 @@
 
         <div class="hero__actions">
           <v-btn
-            color="secondary"
+            color="primary"
             variant="outlined"
             prepend-icon="mdi-file-excel-outline"
             class="text-button"
@@ -22,8 +22,9 @@
           >
             Exportar Excel
           </v-btn>
+
           <v-btn
-            color="secondary"
+            color="primary"
             variant="outlined"
             prepend-icon="mdi-file-pdf-box"
             class="text-button"
@@ -88,18 +89,7 @@
             </div>
 
             <v-card-text class="pa-7">
-              <div class="d-flex justify-end mb-5 no-print">
-                <v-btn
-                  variant="outlined"
-                  color="secondary"
-                  size="small"
-                  class="text-button"
-                  prepend-icon="mdi-printer-outline"
-                  @click="imprimirBoletin"
-                >
-                  Imprimir boletín
-                </v-btn>
-              </div>
+              
 
               <div class="kpi-grid mb-8">
                 <div class="kpi-card kpi-card--primary">
