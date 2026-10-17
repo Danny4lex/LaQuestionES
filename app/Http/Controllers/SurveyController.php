@@ -281,7 +281,11 @@ public function live(Request $request, Survey $survey): JsonResponse
         $survey->update($validated);
 
         if (!empty($validated)) {
-            $this->logChange($request, $survey->id, 'Edición', $this->describirCambios($validated));
+            $registrar = !$request->boolean('auto')
+                || Cache::add("autosave_log_{$survey->id}_{$request->user()->id}", true, now()->addMinutes(10));
+            if ($registrar) {
+                $this->logChange($request, $survey->id, 'Edición', $this->describirCambios($validated));
+            }
         }
 
         $this->clearSurveyCache($survey->id);
