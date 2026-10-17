@@ -1,5 +1,6 @@
 import axios from "axios";
 import useAuth from "../composables/useAuth";
+import { limpiarSesion } from "../utils/session";
 
 const { refreshAccessToken } = useAuth();
 
@@ -29,7 +30,8 @@ gatewayApi.interceptors.response.use(
       // Refresh the access token
       const response = await refreshAccessToken(verifier, refreshToken).catch(
         (error) => {
-          localStorage.clear();
+          // localStorage.clear();
+          limpiarSesion();
           window.location.href = "/login";
         }
       );

@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import { limpiarSesion } from "../utils/session";
 const backendApi = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL + "/api",
 });
@@ -49,7 +49,7 @@ backendApi.interceptors.response.use(
                 originalRequest.headers["Authorization"] = "Bearer " + newToken;
                 return backendApi(originalRequest);
             } catch (refreshError) {
-                localStorage.clear();
+                limpiarSesion();
                 window.location.href = "/login";
                 return Promise.reject(refreshError);
             }

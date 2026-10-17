@@ -5,6 +5,7 @@ import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
 
 import backendApi from "@/services/backendApi.js"
+import { limpiarSesion } from "../utils/session";
 
 const userApiEndpoint = import.meta.env.VITE_BACKEND_USER_API_ENDPOINT;
 const refreshTokenEndpoint = import.meta.env.VITE_BACKEND_REFRESH_TOKEN_ENDPOINT;
@@ -54,9 +55,11 @@ const useAuth = () => {
   };
 
   const logout = () => {
-    localStorage.clear();
-    isLoggedIn.value = false;
-    router.push("/login");
+    limpiarSesion(); // borra token y perfil del navegador, conserva preferencias (estilos)
+
+    // No se tocan user ni isLoggedIn aquí: la recarga completa limpia la memoria,
+    // y así la pantalla no cambia durante el instante de la salida.
+    window.location.replace(router.resolve("/login").href);
   };
 
   const login = async (credentials) => {

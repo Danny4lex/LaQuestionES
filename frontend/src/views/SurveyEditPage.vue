@@ -788,14 +788,12 @@
 
       <!-- Diálogo: comentarios/correcciones por sección ("papelito") -->
       <v-dialog v-model="dialogComentarios" max-width="560">
-        <v-card>
-          <v-card-title class="text-h6">
-            <h3 class="text-page-title mt-8">Editar encuesta</h3>
-            <div class="text-body-small text-medium-emphasis font-weight-regular">
-              {{ seccionComentarios?.name || '(sin nombre)' }}
-            </div>
+        <v-card class="dialog-card">
+          <v-card-title class="dialog-header">
+            <div class="dialog-title">Comentarios</div>
+            <div class="dialog-subtitle">{{ seccionComentarios?.name || '(sin nombre)' }}</div>
           </v-card-title>
-          <v-card-text>
+          <v-card-text class="dialog-body">
             <p class="text-caption text-medium-emphasis mb-3">
               Solo el Administrador y el Encuestador de esta encuesta pueden ver este hilo.
             </p>
@@ -857,7 +855,7 @@
               hide-details
             />
           </v-card-text>
-          <v-card-actions class="pa-4">
+          <v-card-actions class="dialog-actions">
             <v-spacer />
             <v-btn variant="outlined" color="secondary" class="text-button" @click="dialogComentarios = false">
               Cerrar
@@ -2029,6 +2027,58 @@ onMounted(async () => {
   font-size: 0.75rem;
   color: #64748B;
   margin: 0;
+}
+
+/* ============================================= */
+/* DIÁLOGOS — estilo unificado con el hero       */
+/* ============================================= */
+.dialog-card {
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(6, 52, 86, 0.22) !important;
+}
+
+.dialog-card :deep(.v-card-title.dialog-header) {
+  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%) !important;
+  padding: 20px 24px !important;
+  display: block !important;
+  color: #ffffff !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+
+.dialog-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.2;
+  color: #ffffff;
+  margin: 0;
+}
+
+.dialog-subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #ffffff;
+  opacity: 0.85;
+  margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialog-card :deep(.v-card-text.dialog-body) {
+  background-color: #ffffff;
+  padding: 20px 24px !important;
+}
+
+.dialog-card :deep(.v-card-actions.dialog-actions) {
+  padding: 14px 24px 18px !important;
+  background-color: #ffffff;
+  border-top: 1px solid #E3EBF5;
 }
 
 /* ============================================= */
