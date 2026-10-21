@@ -35,11 +35,11 @@ const vuetify = createVuetify({
     themes: {
       light: {
         colors: {
-          primary: "#4880FF",
+          primary: "#1DAFAF",
           secondary: "#E42716B0",
-          accent: "#2D52A7",
+          accent: "#1C8686",
           error: "#E42716B0",
-          info: "#2196F3",
+          info: "#1DAFAF",
           success: "#9EF18D",
           warning: "#FFC107",
         },

@@ -413,7 +413,7 @@ function enviar() {
 }
 
 .survey-card-header {
-  background-color: #2D52A7;
+  background-color: #1C8686;
   padding: 24px 28px;
   color: #ffffff;
 }
@@ -444,7 +444,7 @@ function enviar() {
 
 .progress-label {
   font-weight: 500;
-  color: #1E293B;
+  color: #235454;
 }
 
 .survey-section {
@@ -458,7 +458,7 @@ function enviar() {
 .section-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1E293B;
+  color: #235454;
   margin-bottom: 4px;
 }
 
@@ -473,13 +473,13 @@ function enviar() {
   border-radius: 8px;
   padding: 14px 16px;
   margin-bottom: 12px;
-  border-left: 3px solid #4880FF;
+  border-left: 3px solid #1DAFAF;
 }
 
 .question-statement {
   font-size: 0.9rem;
   font-weight: 500;
-  color: #1E293B;
+  color: #235454;
   margin-bottom: 10px;
 }
 
@@ -523,8 +523,8 @@ function enviar() {
 }
 
 .scale-option-btn--selected {
-  background-color: #4880FF;
-  border-color: #4880FF;
+  background-color: #1DAFAF;
+  border-color: #1DAFAF;
   color: #ffffff;
 }
 

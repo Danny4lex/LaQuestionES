@@ -38,8 +38,8 @@ function buildChart() {
       labels: props.labels,
       datasets: [{
         data: props.values,
-        backgroundColor: ['#2D52A7', '#4880FF'],
-        borderColor: ['#2D52A7', '#4880FF'],
+        backgroundColor: ['#1C8686', '#1DAFAF'],
+        borderColor: ['#1C8686', '#1DAFAF'],
         borderWidth: 1
       }]
     },
@@ -91,7 +91,7 @@ onUnmounted(() => {
   padding: 0 0 6px 0;
   font-weight: 500;
   font-size: 0.75rem;
-  color: #1e293b;
+  color: #235454;
   
 }
 .chart-card .card-body { padding: 6px 0 0 0; }

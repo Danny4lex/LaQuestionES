@@ -405,7 +405,7 @@ onMounted(async () => {
   border-radius: 10px;
   overflow: hidden;
   margin: 32px 0 20px;
-  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   color: #ffffff;
 }
 

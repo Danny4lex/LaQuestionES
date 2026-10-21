@@ -4,13 +4,13 @@
       <v-row class="text-center">
         <v-col cols="12" sm="12" md="4" class="my-auto">
           <a href="https://cultura.gob.sv" target="__blank"
-            ><b>Ministerio de Cultura</b></a
+            ><b>La Question ES</b></a
           >
         </v-col>
         <v-col cols="12" sm="12" md="4">
           <v-img
-            src="/images/logo_goes.svg"
-            alt=""
+            :src="logoUrl"
+            alt="Logo"
             class="mx-auto text-center"
             style="max-width: 350px; height: auto"
           />
@@ -24,12 +24,13 @@
 </template>
 
 <script setup>
+import logoUrl from '@/assets/Logo2.png';
 </script>
 
 <style scoped>
 a {
   text-decoration: none;
-  color: black;
+  color: #235454;
 }
 
 /* Línea divisoria superior delgada, según guía de estilo. */
