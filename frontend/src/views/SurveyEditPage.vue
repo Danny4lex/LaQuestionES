@@ -18,7 +18,7 @@
        <v-overlay
       v-model="guardando"
       persistent
-      scrim="#063456"
+      scrim="#235454"
       class="align-center justify-center"
     >
       <div class="text-center text-white">
@@ -688,7 +688,7 @@
           </div>
 
           <v-btn
-            color="#063456"
+            color="#235454"
             size="small"
             variant="flat"
             class="text-button mb-4 text-white"
@@ -814,7 +814,7 @@
                 :class="esAdministrador(c) ? 'comentario-card--admin' : 'comentario-card--encuestador'"
               >
                 <div class="comentario-fila">
-                  <v-avatar :color="esAdministrador(c) ? '#8A6D00' : '#2D52A7'" size="32" class="flex-shrink-0">
+                  <v-avatar :color="esAdministrador(c) ? '#8A6D00' : '#1C8686'" size="32" class="flex-shrink-0">
                     <span class="text-white text-caption font-weight-bold">{{ inicialesComentario(c) }}</span>
                   </v-avatar>
                   <div class="flex-grow-1">
@@ -824,7 +824,7 @@
                         <v-chip
                           v-if="c.user?.role?.name"
                           size="x-small"
-                          :color="esAdministrador(c) ? '#8A6D00' : '#2D52A7'"
+                          :color="esAdministrador(c) ? '#8A6D00' : '#1C8686'"
                           variant="flat"
                           class="text-white"
                         >
@@ -1657,7 +1657,7 @@ onMounted(async () => {
   border-radius: 10px;
   overflow: hidden;
   margin: 32px 0 20px;
-  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   color: #ffffff;
 }
 
@@ -1742,7 +1742,7 @@ onMounted(async () => {
 
 .comentario-card--encuestador {
   background-color: #EEF3FC;
-  border-left-color: #2D52A7;
+  border-left-color: #1C8686;
 }
 
 .comentario-fila {
@@ -1802,7 +1802,7 @@ onMounted(async () => {
 
 .question-item {
   background: #ffffff;
-  border-left: 3px solid #4880FF;
+  border-left: 3px solid #1DAFAF;
   border-radius: 4px;
   cursor: default;
 }
@@ -1836,7 +1836,7 @@ onMounted(async () => {
   height: 20px;
   border-radius: 10px;
   box-sizing: border-box;
-  border: 1px solid #063456;
+  border: 1px solid #235454;
   transition: background 0.2s;
 }
 
@@ -1857,14 +1857,14 @@ onMounted(async () => {
 .switch::after {
   content: '';
   border-radius: 50%;
-  background: #063456;
+  background: #235454;
   grid-column: 2;
   transition: background 0.2s;
 }
 
 .switch-wrap:has(input:checked) {
-  background: #063456;
-  border-color: #063456;
+  background: #235454;
+  border-color: #235454;
 }
 
 .switch-wrap:has(input:checked) .switch {
@@ -1902,7 +1902,7 @@ onMounted(async () => {
 }
 
 .question-type-btn {
-  background-color: #4880FF75 !important;
+  background-color: #1DAFAF75 !important;
   color: #313845 !important;
   font-weight: 400 !important;
   border-radius: 6px !important;
@@ -1922,7 +1922,7 @@ onMounted(async () => {
 }
 
 .preview-card-header {
-  background-color: #2D52A7;
+  background-color: #1C8686;
   padding: 24px 28px;
   color: #ffffff;
 }
@@ -1957,7 +1957,7 @@ onMounted(async () => {
 .preview-section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #1E293B;
+  color: #235454;
   margin-bottom: 4px;
 }
 
@@ -1969,7 +1969,7 @@ onMounted(async () => {
 
 .preview-question {
   background-color: #ffffff;
-  border-left: 3px solid #4880FF;
+  border-left: 3px solid #1DAFAF;
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 12px;
@@ -1978,7 +1978,7 @@ onMounted(async () => {
 .preview-question-statement {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #1E293B;
+  color: #235454;
   margin-bottom: 8px;
 }
 
@@ -2035,11 +2035,11 @@ onMounted(async () => {
 .dialog-card {
   border-radius: 12px !important;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(6, 52, 86, 0.22) !important;
+  box-shadow: 0 20px 60px rgba(35, 84, 84, 0.22) !important;
 }
 
 .dialog-card :deep(.v-card-title.dialog-header) {
-  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%) !important;
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   padding: 20px 24px !important;
   display: block !important;
   color: #ffffff !important;

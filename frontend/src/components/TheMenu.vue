@@ -3,7 +3,8 @@
     :rail="stateSideBar !== 'active'"
     permanent
     app
-    color="#2D52A7"
+    color="#1C8686
+"
     width="240"
     rail-width="80"
     class="app-sidebar"
@@ -21,7 +22,7 @@
 
         <div v-if="stateSideBar === 'active'" class="ms-3 text-white">
           <div class="text-caption font-weight-bold">
-            Gobierno de El Salvador
+            La Question ES
           </div>
 
           <div class="text-caption font-weight-light">
@@ -144,7 +145,7 @@ const ajustesAbierto = ref(false);
    HOVER
 ===================================================== */
 .sidebar-item:hover {
-  background-color: #4880FF !important;
+  background-color: #1DAFAF !important;
 }
 
 .sidebar-item:hover::before {
@@ -169,7 +170,7 @@ const ajustesAbierto = ref(false);
    ELEMENTO ACTIVO
 ===================================================== */
 .sidebar-item.v-list-item--active {
-  background-color: #4880FF !important;
+  background-color: #1DAFAF !important;
   color: white !important;
 }
 

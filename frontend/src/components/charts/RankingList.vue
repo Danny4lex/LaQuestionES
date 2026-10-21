@@ -57,7 +57,7 @@ function barWidth(responses) {
   padding: 0 0 6px 0;
   font-weight: 500;
   font-size: 0.75rem;
-  color: #1e293b;
+  color: #235454;
 }
 .chart-card .card-body { padding: 6px 0 0 0; }
 
@@ -70,14 +70,14 @@ function barWidth(responses) {
   width: 300px;
   font-size: 0.70rem;
   font-weight: 500;
-  color: #1e293b;
+  color: #235454;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .ranking-item .rank-bar {
   height: 12px;
-  background-color: #063456;
+  background-color: #235454;
   border-radius: 3px;
   min-width: 3px;
   transition: width 0.3s;
@@ -85,7 +85,7 @@ function barWidth(responses) {
 .ranking-item .rank-value {
   font-size: 0.65rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #235454;
   margin-left: 8px;
   min-width: 25px;
 }

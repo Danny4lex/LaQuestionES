@@ -2,7 +2,7 @@
   <v-navigation-drawer
     :model-value="stateSideBar === 'active'"
     permanent
-    color="#2D52A7"
+    color="#1C8686"
     width="240"
     class="app-sidebar"
   >

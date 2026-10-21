@@ -33,7 +33,7 @@
     <v-card class="filter-card mb-5" variant="flat">
       <v-card-text class="pa-5">
         <div class="section-title">
-          <v-icon size="16" color="#4880FF">mdi-filter-variant</v-icon>
+          <v-icon size="16" color="#1DAFAF">mdi-filter-variant</v-icon>
           Filtros
         </div>
 
@@ -310,7 +310,7 @@ onMounted(async () => {
   border-radius: 10px;
   overflow: hidden;
   margin: 32px 0 20px;
-  background: linear-gradient(135deg, #EDF2FF 0%, #F4F6FD 60%, #E8F0FB 100%);
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   border: 1px solid #E3EBF5;
 }
 
@@ -318,8 +318,8 @@ onMounted(async () => {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle at 90% -20%, rgba(72, 128, 255, 0.18), transparent 45%),
-    radial-gradient(circle at -10% 120%, rgba(72, 128, 255, 0.10), transparent 40%);
+    radial-gradient(circle at 90% -20%, rgba(29, 175, 175, 0.18), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(29, 175, 175, 0.10), transparent 40%);
   pointer-events: none;
 }
 
@@ -344,8 +344,8 @@ onMounted(async () => {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #4880FF;
-  background: rgba(72, 128, 255, 0.10);
+  color: #1DAFAF;
+  background: rgba(29, 175, 175, 0.10);
   padding: 4px 10px;
   border-radius: 999px;
   margin-bottom: 10px;
@@ -354,13 +354,13 @@ onMounted(async () => {
 .hero__title {
   margin: 0 0 6px 0;
   line-height: 1.15;
-  color: #063456;
+  color: #ffffff;
 }
 
 .hero__subtitle {
   margin: 0;
   line-height: 1.4;
-  color: #4a5b6b;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .hero__actions {
@@ -388,7 +388,7 @@ onMounted(async () => {
   width: 3px;
   height: 14px;
   border-radius: 2px;
-  background: #4880FF;
+  background: #1DAFAF;
 }
 
 /* ============================================= */
@@ -420,7 +420,7 @@ onMounted(async () => {
 }
 
 .kpi-card:hover {
-  box-shadow: 0 6px 16px rgba(72, 128, 255, 0.10);
+  box-shadow: 0 6px 16px rgba(29, 175, 175, 0.10);
   transform: translateY(-1px);
 }
 
@@ -433,9 +433,9 @@ onMounted(async () => {
   height: 3px;
 }
 
-.kpi-card--primary::before { background: #4880FF; }
+.kpi-card--primary::before { background: #1DAFAF; }
 .kpi-card--success::before { background: #2FB56B; }
-.kpi-card--accent::before  { background: #2D52A7; }
+.kpi-card--accent::before  { background: #1C8686; }
 
 .kpi-card__icon {
   width: 32px;
@@ -456,7 +456,7 @@ onMounted(async () => {
 
 .kpi-card--accent .kpi-card__icon {
   background: #E4EAF7;
-  color: #2D52A7;
+  color: #1C8686;
 }
 
 .kpi-card__value {
@@ -489,6 +489,6 @@ onMounted(async () => {
 }
 
 .chart-card:hover {
-  box-shadow: 0 4px 14px rgba(72, 128, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(29, 175, 175, 0.08);
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <v-app-bar app color="#F4F6FD" height="58" elevation="0" class="app-header">
-    <v-btn v-if="showMenuToggle" icon variant="text" color="#2D52A7" class="my-auto me-2" @click="toggleMenu">
+    <v-btn v-if="showMenuToggle" icon variant="text" color="#1C8686" class="my-auto me-2" @click="toggleMenu">
       <v-icon>
         {{ stateSideBar === 'active' ? 'mdi-chevron-left' : 'mdi-chevron-right' }}
       </v-icon>
@@ -8,8 +8,8 @@
 
     <div class="d-flex align-center">
       
-      <span class="text-body-2 font-weight-medium" style="color: #2D52A7;">
-        República de El Salvador - Sistema de Encuestas
+      <span class="text-body-2 font-weight-medium" style="color: #1C8686;">
+        La Question ES - Sistema de Encuestas
       </span>
     </div>
 
@@ -23,7 +23,7 @@
   @update:model-value="(abierto) => abierto && cargarNotificaciones()"
 >
   <template #activator="{ props }">
-    <v-btn v-bind="props" icon variant="text" color="#2D52A7" class="me-2">
+    <v-btn v-bind="props" icon variant="text" color="#1C8686" class="me-2">
       <v-badge :content="noLeidas" :model-value="noLeidas > 0" color="error" floating>
         <v-icon>mdi-bell</v-icon>
       </v-badge>
@@ -69,14 +69,14 @@
 
       <div class="d-flex align-center me-4">
         <div class="me-2 text-right">
-          <div class="text-body-2 font-weight-bold" style="color: #2D52A7; line-height: 1.1;">
+          <div class="text-body-2 font-weight-bold" style="color: #1C8686; line-height: 1.1;">
             {{ user.name }}
           </div>
           <div v-if="surveyProfile?.role" class="text-caption" style="color: #374957; line-height: 1.1;">
             {{ surveyProfile.role }}
           </div>
         </div>
-        <v-avatar color="#2D52A7" size="32">
+        <v-avatar color="#1C8686" size="32">
           <span class="text-white font-weight">{{ initials }}</span>
         </v-avatar>
       </div>
@@ -169,7 +169,7 @@ onBeforeUnmount(() => clearInterval(temporizador));
 
 <style scoped>
 .app-header {
-  border-bottom: 1px solid #2D52A7;
+  border-bottom: 1px solid #1C8686;
 }
 
 .notif-sin-leer { background: #EDF2FF; }
