@@ -76,7 +76,7 @@
     <v-card class="filter-card mb-5" variant="flat">
       <v-card-text class="pa-5">
         <div class="section-title">
-          <v-icon size="16" color="#4880FF">mdi-filter-variant</v-icon>
+          <v-icon size="16" color="#1DAFAF">mdi-filter-variant</v-icon>
           Búsqueda y filtros
         </div>
 
@@ -122,7 +122,7 @@
   icon
   size="small"
   variant="text"
-  color="#2D52A7"
+  color="#1C8686"
   class="ms-1"
   title="Refrescar encuestas"
   aria-label="Refrescar encuestas"
@@ -1332,7 +1332,7 @@ onMounted(async () => {
   border-radius: 10px;
   overflow: hidden;
   margin: 32px 0 20px;
-  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   color: #ffffff;
 }
 
@@ -1392,7 +1392,7 @@ onMounted(async () => {
 }
 
 .hero__cta {
-  color: #063456 !important;
+  color: #235454 !important;
 }
 
 /* ============================================= */
@@ -1414,7 +1414,7 @@ onMounted(async () => {
   width: 3px;
   height: 14px;
   border-radius: 2px;
-  background: #4880FF;
+  background: #1DAFAF;
 }
 
 /* ============================================= */
@@ -1437,7 +1437,7 @@ onMounted(async () => {
 }
 
 .kpi-card:hover {
-  box-shadow: 0 6px 16px rgba(72, 128, 255, 0.10);
+  box-shadow: 0 6px 16px rgba(29, 175, 175, 0.10);
   transform: translateY(-1px);
 }
 
@@ -1450,9 +1450,9 @@ onMounted(async () => {
   height: 3px;
 }
 
-.kpi-card--primary::before { background: #4880FF; }
+.kpi-card--primary::before { background: #1DAFAF; }
 .kpi-card--success::before { background: #2FB56B; }
-.kpi-card--accent::before  { background: #2D52A7; }
+.kpi-card--accent::before  { background: #1C8686; }
 .kpi-card--muted::before   { background: #D9D9D9; }
 
 .kpi-card__icon {
@@ -1460,7 +1460,7 @@ onMounted(async () => {
   height: 32px;
   border-radius: 6px;
   background: #E9EDFD;
-  color: #063456;
+  color: #235454;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1474,7 +1474,7 @@ onMounted(async () => {
 
 .kpi-card--accent .kpi-card__icon {
   background: #E4EAF7;
-  color: #2D52A7;
+  color: #1C8686;
 }
 
 .kpi-card--muted .kpi-card__icon {
@@ -1486,7 +1486,7 @@ onMounted(async () => {
   font-family: Poppins;
   font-weight: 700;
   font-size: 26px;
-  color: #063456;
+  color: #235454;
   line-height: 1;
   margin-bottom: 4px;
 }
@@ -1569,12 +1569,12 @@ onMounted(async () => {
 .filter-btn:hover,
 .quick-filter-btn:hover {
   background-color: #F0F4FB !important;
-  border-color: #4880FF !important;
+  border-color: #1DAFAF !important;
 }
 
 .quick-filter-btn--active {
-  background-color: #4880FF !important;
-  border-color: #4880FF !important;
+  background-color: #1DAFAF !important;
+  border-color: #1DAFAF !important;
   color: #ffffff !important;
 }
 
@@ -1583,8 +1583,8 @@ onMounted(async () => {
 }
 
 .quick-filter-btn--active:hover {
-  background-color: #2D52A7 !important;
-  border-color: #2D52A7 !important;
+  background-color: #1C8686 !important;
+  border-color: #1C8686 !important;
 }
 
 /* ============================================= */
@@ -1676,14 +1676,14 @@ onMounted(async () => {
 
 .estado-btn--review :deep(.v-btn__content)::before,
 .estado-btn--needs_correction :deep(.v-btn__content)::before,
-.estado-btn--paused :deep(.v-btn__content)::before { background-color: #4880FF; }
+.estado-btn--paused :deep(.v-btn__content)::before { background-color: #1DAFAF; }
 
-.estado-btn--approved :deep(.v-btn__content)::before { background-color: #2D52A7; }
+.estado-btn--approved :deep(.v-btn__content)::before { background-color: #1C8686; }
 
 .estado-btn--draft :deep(.v-btn__content)::before,
 .estado-btn--archived :deep(.v-btn__content)::before,
 .estado-btn--default :deep(.v-btn__content)::before { background-color: #D9D9D9; }
-.estado-btn--published_waiting :deep(.v-btn__content)::before { background-color: #4880FF; }
+.estado-btn--published_waiting :deep(.v-btn__content)::before { background-color: #1DAFAF; }
 
 /* ============================================= */
 /* ÍCONOS DE ACCIONES                             */
@@ -1717,11 +1717,11 @@ onMounted(async () => {
 .dialog-card {
   border-radius: 12px !important;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(6, 52, 86, 0.22) !important;
+  box-shadow: 0 20px 60px rgba(35, 84, 84, 0.22) !important;
 }
 
 .dialog-card :deep(.v-card-title.dialog-header) {
-  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%) !important;
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   padding: 20px 24px !important;
   display: block !important;
   color: #ffffff !important;
@@ -1786,10 +1786,10 @@ onMounted(async () => {
 <style>
 .acciones-menu .v-list {
   background:
-    linear-gradient(rgba(72, 128, 255, 0.14), rgba(72, 128, 255, 0.14)),
+    linear-gradient(rgba(145, 233, 233, 0.14), rgba(111, 213, 213, 0.14)),
     rgba(255, 255, 255, 0.88) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(72, 128, 255, 0.35);
+  border: 1px solid rgba(29, 175, 175, 0.35);
   border-radius: 7px;
   padding: 4px;
 }
@@ -1797,11 +1797,11 @@ onMounted(async () => {
 .acciones-menu .v-list-item {
   min-height: 34px;
   border-radius: 4px;
-  color: #2D52A7;
+  color: #1C8686;
 }
 
 .acciones-menu .v-list-item:hover {
-  background: rgba(72, 128, 255, 0.22);
+  background: rgba(29, 175, 175, 0.22);
 }
 
 .acciones-menu .v-list-item-title {
@@ -1821,7 +1821,7 @@ onMounted(async () => {
 }
 
 .acciones-menu .v-divider {
-  border-color: rgba(72, 128, 255, 0.35);
+  border-color: rgba(29, 175, 175, 0.35);
   opacity: 1;
 }
 

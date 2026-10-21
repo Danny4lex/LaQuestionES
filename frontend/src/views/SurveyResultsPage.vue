@@ -124,7 +124,8 @@
                   </div>
                   <v-progress-linear
                     :model-value="((indicator.average_score || 0) / 5) * 100"
-                    color="#4880FF"
+                    color="#1DAFAF
+"
                     height="6"
                     rounded
                     bg-color="#E8F0F8"
@@ -189,7 +190,7 @@
                 </div>
                 <v-progress-linear
                   :model-value="((indicator.average_score || 0) / 5) * 100"
-                  color="#4880FF"
+                  color="#1DAFAF"
                   height="6"
                   rounded
                   bg-color="#E8F0F8"
@@ -244,7 +245,7 @@
                 </div>
                 <v-progress-linear
                   :model-value="(question.summary.average / 5) * 100"
-                  color="#4880FF"
+                  color="#1DAFAF"
                   height="8"
                   rounded
                   bg-color="#E8F0F8"
@@ -269,7 +270,7 @@
               </div>
 
               <div v-else class="d-flex align-center">
-                <v-icon class="me-2" color="#4880FF">mdi-text-box-outline</v-icon>
+                <v-icon class="me-2" color="#1DAFAF">mdi-text-box-outline</v-icon>
                 <p class="text-body-small mb-0">
                   {{ question.summary.total_responses }} respuestas de texto.
                   Consulte la pestaña "Por encuestado" para revisarlas una a una.
@@ -828,7 +829,7 @@ async function abrirReporteDependencia() {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #4880FF;
+  color: #1DAFAF;
   background: rgba(72, 128, 255, 0.10);
   padding: 4px 10px;
   border-radius: 999px;
@@ -870,7 +871,7 @@ async function abrirReporteDependencia() {
   width: 3px;
   height: 14px;
   border-radius: 2px;
-  background: #4880FF;
+  background: #1DAFAF;
 }
 
 /* ---------- KPI grid / cards ---------- */
@@ -898,9 +899,9 @@ async function abrirReporteDependencia() {
   height: 3px;
 }
 
-.kpi-card--primary::before { background: #4880FF; }
+.kpi-card--primary::before { background: #1DAFAF; }
 .kpi-card--success::before { background: #2FB56B; }
-.kpi-card--accent::before  { background: #2D52A7; }
+.kpi-card--accent::before  { background: #1C8686; }
 
 .kpi-card__icon {
   width: 32px;
@@ -921,7 +922,8 @@ async function abrirReporteDependencia() {
 
 .kpi-card--accent .kpi-card__icon {
   background: #E4EAF7;
-  color: #2D52A7;
+  color: #1C8686
+  ;
 }
 
 .kpi-card__value {
@@ -951,7 +953,7 @@ async function abrirReporteDependencia() {
 
 .boletin-hero {
   padding: 28px 28px 22px;
-  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%);
   color: #ffffff;
 }
 
@@ -1026,7 +1028,7 @@ async function abrirReporteDependencia() {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #4880FF;
+  background-color: #1DAFAF;
   color: #ffffff;
   font-size: 12px;
   font-weight: 600;
@@ -1062,7 +1064,8 @@ async function abrirReporteDependencia() {
   padding: 5px 12px;
   border-radius: 999px;
   background: #EDF2FF;
-  color: #2D52A7;
+  color: #1C8686
+  ;
   font-family: Poppins;
   font-size: 12px;
   font-weight: 600;
@@ -1084,13 +1087,13 @@ async function abrirReporteDependencia() {
 }
 
 .respondent-card:hover {
-  box-shadow: 0 4px 14px rgba(72, 128, 255, 0.10);
+  box-shadow: 0 4px 14px #235454;
   border-color: #CFE0FF;
 }
 
 .respondent-card--open {
-  border-color: #4880FF;
-  box-shadow: 0 6px 18px rgba(72, 128, 255, 0.12);
+  border-color:  #1DAFAF;
+  box-shadow: 0 6px 18px #235454;
 }
 
 .respondent-card__head {
@@ -1106,7 +1109,7 @@ async function abrirReporteDependencia() {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #4880FF;
+  background:  #1DAFAF;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -1116,7 +1119,7 @@ async function abrirReporteDependencia() {
   font-size: 14px;
   letter-spacing: 0.03em;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(72, 128, 255, 0.25);
+  box-shadow: 0 2px 6px #235454;
 }
 
 .respondent-info {
@@ -1151,7 +1154,7 @@ async function abrirReporteDependencia() {
   padding: 1px 7px;
   border-radius: 999px;
   background: #F0F4FB;
-  color: #4880FF;
+  color:  #1DAFAF;
   font-weight: 600;
   font-size: 10.5px;
 }
@@ -1165,7 +1168,7 @@ async function abrirReporteDependencia() {
 }
 
 .respondent-card--open .respondent-toggle {
-  color: #4880FF !important;
+  color:  #1DAFAF !important;
 }
 
 .respondent-card__body {
@@ -1204,7 +1207,7 @@ async function abrirReporteDependencia() {
   height: 18px;
   border-radius: 50%;
   background: #E9EDFD;
-  color: #4880FF;
+  color:  #1DAFAF;
   font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
@@ -1217,7 +1220,7 @@ async function abrirReporteDependencia() {
   color: #313845;
   line-height: 1.5;
   padding-left: 14px;
-  border-left: 2px solid #4880FF;
+  border-left: 2px solid  #1DAFAF;
   margin-left: 8px;
 }
 
@@ -1257,7 +1260,7 @@ async function abrirReporteDependencia() {
 
   .boletin-hero {
     background: #ffffff !important;
-    color: #063456 !important;
+    color: #235454!important;
   }
 }
 </style>

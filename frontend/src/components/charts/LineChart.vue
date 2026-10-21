@@ -39,11 +39,11 @@ function buildChart() {
         {
           label: 'Respuestas',
           data: props.values,
-          borderColor: '#4880FF',
-          backgroundColor: 'rgba(72,128,255,0.1)',
+          borderColor: '#1DAFAF',
+          backgroundColor: 'rgba(29,175,175,0.1)',
           tension: 0.3,
           fill: true,
-          pointBackgroundColor: '#4880FF',
+          pointBackgroundColor: '#1DAFAF',
           pointRadius: 2,
         }
       ]
@@ -92,7 +92,7 @@ onUnmounted(() => {
   padding: 0 0 6px 0;
   font-weight: 500;
   font-size: 0.75rem;
-  color: #1e293b;
+  color: #235454;
 }
 .chart-card .card-body { padding: 6px 0 0 0; }
 .chart-container { height: 300px; position: relative; }

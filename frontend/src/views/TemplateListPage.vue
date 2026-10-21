@@ -587,7 +587,7 @@ onMounted(async () => {
   border-radius: 10px;
   overflow: hidden;
   margin: 32px 0 20px;
-  background: linear-gradient(135deg, #063456     0%, #2D52A7 100%);
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   color: #ffffff;
 }
 
@@ -647,7 +647,7 @@ onMounted(async () => {
 }
 
 .hero__cta {
-  color: #063456 !important;
+  color: #235454 !important;
 }
 
 @media (max-width: 600px) {
@@ -661,7 +661,7 @@ onMounted(async () => {
 
 /* ---------- Vista previa de plantilla ---------- */
 .preview-header {
-  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%);
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   color: #ffffff;
   padding: 24px 28px;
 }
@@ -669,7 +669,7 @@ onMounted(async () => {
 .preview-description { margin: 8px 0 0; opacity: 0.85; font-size: 14px; }
 .preview-body { background: #F4F6FD; padding: 20px 28px; }
 .preview-section { background: #ffffff; border-radius: 7px; padding: 16px; margin-bottom: 12px; }
-.preview-section-title { color: #2D52A7; font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+.preview-section-title { color: #1C8686; font-size: 16px; font-weight: 600; margin-bottom: 10px; }
 .preview-question { padding: 10px 0; border-top: 1px solid #D2D9DD; }
 .preview-section-title + .preview-question { border-top: none; }
 .preview-question-statement { font-weight: 500; color: #313845; margin: 0 0 6px; }
@@ -690,11 +690,11 @@ onMounted(async () => {
 .dialog-card {
   border-radius: 12px !important;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(6, 52, 86, 0.22) !important;
+  box-shadow: 0 20px 60px rgba(35, 84, 84, 0.22) !important;
 }
 
 .dialog-card :deep(.v-card-title.dialog-header) {
-  background: linear-gradient(135deg, #063456 0%, #2D52A7 100%) !important;
+  background: linear-gradient(135deg, #1C8686 0%, #1DAFAF 100%) !important;
   padding: 20px 24px !important;
   display: block !important;
   color: #ffffff !important;

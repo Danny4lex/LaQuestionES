@@ -1,8 +1,8 @@
 <template>
   <div class="d-flex justify-content-center">
     <v-card class="text-center p-5 pt-4 pb-4 shadow" @keyup.enter="loginUser()">
-      <v-img class="mx-auto" src="/images/cultura_logo.jpg" style="max-width: 300px" />
-      <h2 class="pb-1" style="color: #5775b8">
+      <v-img class="mx-auto" :src="logoUrl" style="max-width: 300px" />
+      <h2 class="pb-1" style="color: #1C8686">
         Ingresa tus datos para iniciar
       </h2>
 
@@ -28,6 +28,9 @@ import { useRouter } from "vue-router";
 import useAuth from "@/composables/useAuth.js"
 import useAlert from "@/composables/useAlert.js"
 import { limpiarSesion } from "@/utils/session";
+
+// Import del logo: Vite resuelve la ruta y devuelve la URL final
+import logoUrl from "@/assets/Logo2.png";
 
 const router = useRouter();
 const { user, isLoggedIn, login, hasPermission } = useAuth();
