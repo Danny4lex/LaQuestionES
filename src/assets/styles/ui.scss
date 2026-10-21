@@ -162,43 +162,100 @@
    color: $status-finalizado;
  }
  /* ===== Estilos de cabecera (hero) elegibles desde Ajustes ===== */
-.hero.hero--degradado { background: linear-gradient(135deg, #063456 0%, #2D52A7 100%) !important; border: none !important; color: #fff !important; }
-.hero.hero--solido    { background: #2D52A7 !important; border: none !important; color: #fff !important; }
-.hero.hero--claro     { background: linear-gradient(135deg, #EDF2FF 0%, #F4F6FD 60%, #E8F0FB 100%) !important; border: 1px solid #E3EBF5 !important; color: #063456 !important; }
 
-.hero.hero--degradado .hero__bg,
+/* ------------------------------------------------------------
+   ESTILO 1 — Sólido
+   Fondo: #1C8686 (sin degradado)
+   Texto: #FFFFFF (se conserva la opacidad original donde la tenía)
+   Botón: fondo #FFF
+   ------------------------------------------------------------ */
+.hero.hero--solido {
+  background: #1C8686 !important;
+  border: none !important;
+  color: #fff !important;
+}
+
 .hero.hero--solido .hero__bg {
   background-image:
     radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.10), transparent 45%),
     radial-gradient(circle at -10% 120%, rgba(255, 255, 255, 0.06), transparent 40%) !important;
 }
-.hero.hero--claro .hero__bg {
-  background-image:
-    radial-gradient(circle at 90% -20%, rgba(72, 128, 255, 0.18), transparent 45%),
-    radial-gradient(circle at -10% 120%, rgba(72, 128, 255, 0.10), transparent 40%) !important;
+
+.hero.hero--solido .hero__title { color: #fff !important; }
+.hero.hero--solido .hero__sub,
+.hero.hero--solido .hero__subtitle { color: #fff !important; opacity: 0.85; }
+.hero.hero--solido .hero__eyebrow {
+  color: #fff !important;
+  background: transparent !important;
+  padding: 0 !important;
+  opacity: 0.75;
+}
+.hero.hero--solido .hero__cta {
+  background: #fff !important;
+  color: #1C8686 !important;
 }
 
-/* Textos sobre fondo azul */
-.hero.hero--degradado .hero__title,
-.hero.hero--solido .hero__title { color: #fff !important; }
-.hero.hero--degradado .hero__sub, .hero.hero--degradado .hero__subtitle,
-.hero.hero--solido .hero__sub,    .hero.hero--solido .hero__subtitle { color: #fff !important; opacity: 0.85; }
-.hero.hero--degradado .hero__eyebrow,
-.hero.hero--solido .hero__eyebrow { color: #fff !important; background: transparent !important; padding: 0 !important; opacity: 0.75; }
+/* ------------------------------------------------------------
+   ESTILO 2 — Degradado
+   Fondo: linear-gradient(135deg, #235454 0%, #1C8686 100%)
+   Texto: #FFFFFF (se conserva la opacidad original donde la tenía)
+   Botón: fondo #FFF
+   ------------------------------------------------------------ */
+.hero.hero--degradado {
+  background: linear-gradient(135deg, #235454 0%, #1C8686 100%) !important;
+  border: none !important;
+  color: #fff !important;
+}
 
-/* Textos sobre fondo claro */
-.hero.hero--claro .hero__title { color: #063456 !important; }
-.hero.hero--claro .hero__sub, .hero.hero--claro .hero__subtitle { color: #4a5b6b !important; opacity: 1; }
+.hero.hero--degradado .hero__bg {
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.10), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(255, 255, 255, 0.06), transparent 40%) !important;
+}
+
+.hero.hero--degradado .hero__title { color: #fff !important; }
+.hero.hero--degradado .hero__sub,
+.hero.hero--degradado .hero__subtitle { color: #fff !important; opacity: 0.85; }
+.hero.hero--degradado .hero__eyebrow {
+  color: #fff !important;
+  background: transparent !important;
+  padding: 0 !important;
+  opacity: 0.75;
+}
+.hero.hero--degradado .hero__cta {
+  background: #fff !important;
+  color: #1C8686 !important;
+}
+
+/* ------------------------------------------------------------
+   ESTILO 3 — Claro (sin degradado)
+   Fondo: #E6F4F4 (teal muy claro, sólido)
+   Texto: #235454
+   Botón: fondo #1C8686 / texto #FFF
+   ------------------------------------------------------------ */
+.hero.hero--claro {
+  background: #E6F4F4 !important;
+  border: 1px solid #CDE8E8 !important;
+  color: #235454 !important;
+}
+
+/* Sin degradado: se desactiva el overlay decorativo */
+.hero.hero--claro .hero__bg {
+  background-image: none !important;
+}
+
+.hero.hero--claro .hero__title { color: #235454 !important; }
+.hero.hero--claro .hero__sub,
+.hero.hero--claro .hero__subtitle { color: #235454 !important; opacity: 1; }
 .hero.hero--claro .hero__eyebrow {
   display: inline-block;
-  color: #4880FF !important;
-  background: rgba(72, 128, 255, 0.10) !important;
+  color: #1C8686 !important;
+  background: rgba(28, 134, 134, 0.10) !important;
   padding: 4px 10px !important;
   border-radius: 999px;
   opacity: 1;
 }
-
-/* Botón principal de la cabecera */
-.hero.hero--degradado .hero__cta,
-.hero.hero--solido .hero__cta { background: #fff !important; color: #063456 !important; }
-.hero.hero--claro .hero__cta  { background: #4880FF !important; color: #fff !important; }
+.hero.hero--claro .hero__cta {
+  background: #1C8686 !important;
+  color: #fff !important;
+}

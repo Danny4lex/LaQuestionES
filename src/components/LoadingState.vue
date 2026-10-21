@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-// Indicador de carga con el estilo del proyecto (azul #4880FF).
+// Indicador de carga con el estilo del proyecto (teal #1DAFAF).
 // Uso: <LoadingState message="Cargando encuestas" /> -> "Cargando encuestas..."
 defineProps({
   message: { type: String, default: "Cargando" },
@@ -44,7 +44,7 @@ defineProps({
 
 .loading-ring-arc {
   border-color: transparent;
-  border-top-color: #4880FF;
+  border-top-color: #1DAFAF;
   animation: loading-spin 0.9s linear infinite;
 }
 
@@ -52,7 +52,7 @@ defineProps({
   margin: 0;
   font-size: 0.95rem;
   font-weight: 500;
-  color: #2D52A7;
+  color: #1C8686;
 }
 
 .dots span {
