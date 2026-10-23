@@ -16,24 +16,62 @@ class SurveyPublicController extends Controller
         private readonly AnonymizeResponseService $anonymizeService
     ) {}
 
-    public function show(Survey $survey): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $error = $this->validateSurveyIsOpen($survey);
-        if ($error) {
-            return $error;
+        $query = Survey::with([
+            'category:id,name',
+            'type:id,name',
+            'status:id,name,slug',
+            'department:id,name',
+            'sections' => fn($q) => $q->select('id', 'survey_id')->withCount('questions'),
+        ])
+        ->withCount('responses')
+        ->orderByDesc('id');
+
+        if ($request->boolean('active_only')) {
+            $now = now();
+            $query->whereHas('status', fn($q) => $q->whereIn('slug', ['published', 'activa']))
+                  ->where(function ($q) use ($now) {
+                      $q->whereNull('start_date')->orWhere('start_date', '<=', $now);
+                  })
+                  ->where(function ($q) use ($now) {
+                      $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
+                  });
         }
 
-        if (!str_contains($survey->type->name ?? '', 'Pública')) {
-            return response()->json([
-                'message' => 'Esta encuesta requiere una invitación para responderla.'
-            ], 403);
+        return response()->json($query->get(), 200);
+    }
+
+    public function show(Request $request, Survey $survey): JsonResponse
+    {
+        $survey->load([
+            'sections.questions.options',
+            'status:id,name,slug',
+            'type:id,name',
+            'department:id,name',
+            'category:id,name'
+        ]);
+
+        $isOpen = in_array($survey->status->slug ?? null, ['published', 'activa']);
+        $now = now();
+        if ($survey->start_date && $now->lt($survey->start_date)) {
+            $isOpen = false;
+        }
+        if ($survey->end_date && $now->gt($survey->end_date)) {
+            $isOpen = false;
         }
 
-        return response()->json(
-            $survey->only(['id', 'title', 'description', 'is_single_response', 'anonymity_mode'])
-                + ['sections' => $survey->load('sections.questions.options')->sections],
-            200
-        );
+        $data = $survey->only(['id', 'title', 'description', 'is_single_response', 'anonymity_mode', 'start_date', 'end_date'])
+            + [
+                'is_open' => $isOpen,
+                'status' => $survey->status,
+                'type' => $survey->type,
+                'department' => $survey->department,
+                'category' => $survey->category,
+                'sections' => $survey->sections,
+            ];
+
+        return response()->json($data, 200);
     }
 
     public function showByToken(string $token): JsonResponse
