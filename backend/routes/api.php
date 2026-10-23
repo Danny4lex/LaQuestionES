@@ -219,6 +219,9 @@ Route::middleware(['auth:api', 'auth.external'])->group(function () {
 // 3. ZONA PUBLICA — participante SIN login. NUNCA agregar middleware aqui.
 // ============================================================================
 
+// Listado de encuestas para participantes / encuestados (sin login)
+Route::get('/public/surveys', [SurveyPublicController::class, 'index']);
+
 // Encuesta tipo "Publica": acceso directo por ID (enlace o QR general)
 Route::get('/public/surveys/{survey}', [SurveyPublicController::class, 'show']);
 Route::post('/public/surveys/{survey}/submit', [SurveyPublicController::class, 'submit']);

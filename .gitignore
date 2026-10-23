@@ -29,3 +29,7 @@ yarn-error.log*
 
 # Caché de Vite
 frontend/node_modules/.vite/
+
+# Archivos comprimidos temporales
+*.zip
+*.tar.gz
