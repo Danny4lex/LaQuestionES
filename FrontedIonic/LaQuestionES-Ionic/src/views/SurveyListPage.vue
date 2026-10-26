@@ -19,8 +19,8 @@
           </div>
           <h1 class="hero-title">Encuestas Públicas</h1>
           <p class="hero-sub">
-            Tu opinión ayuda a evaluar y mejorar las iniciativas culturales del país.
-          </p>
+  Explora y participa en las encuestas públicas disponibles. Tu opinión es valiosa para mejorar los servicios y la toma de decisiones.
+</p>
         </div>
       </div>
 
@@ -222,11 +222,10 @@
 
         <!-- Footer sutil institucional -->
         <div class="app-footer">
-          <p class="footer-text">
-            LaQuestionES · Ministerio de Cultura
-          </p>
-          <p class="footer-sub">Gobierno de El Salvador</p>
-        </div>
+  <p class="footer-text">
+    LaQuestionES - Sistema de Gestión de Encuestas
+  </p>
+</div>
       </div>
     </ion-content>
   </ion-page>
