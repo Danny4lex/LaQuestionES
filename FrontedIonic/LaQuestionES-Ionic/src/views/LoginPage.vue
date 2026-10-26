@@ -4,7 +4,6 @@
       <div class="auth-wrapper">
         <ion-card class="auth-card">
           <ion-card-header class="ion-text-center">
-            <p class="eyebrow">MINISTERIO DE CULTURA</p>
             <ion-card-title class="title">LaQuestionES</ion-card-title>
             <ion-card-subtitle class="subtitle">
               Sistema de Gestión de Encuestas
