@@ -1,0 +1,261 @@
+/**
+ * Tipografía global
+ */
+ html,
+ body,
+ #app {
+   background-color: $background-color;
+   font-family: 'Poppins', sans-serif;
+   scroll-behavior: smooth;
+ }
+ 
+ /* =============================================
+    CURSOR DE TEXTO / SELECCIÓN
+    -----------------------------------------------
+    Antes el navegador permitía seleccionar texto (cursor "text" / resaltado
+    azul) sobre CUALQUIER elemento de la interfaz — títulos, botones,
+    encabezados de tabla, íconos — no solo donde el usuario realmente
+    necesita redactar. Se desactiva la selección por defecto en toda la
+    app y se reactiva explícitamente solo en los elementos donde el
+    usuario sí necesita seleccionar/escribir texto: inputs, textareas,
+    contenido editable, y texto de lectura como celdas de tabla o texto
+    de párrafo (para poder copiar resultados, por ejemplo).
+    ============================================= */
+ * {
+   user-select: none;
+   -webkit-user-select: none;
+ }
+ 
+ input,
+ textarea,
+ [contenteditable="true"],
+ .v-field__input,
+ .text-body-small,
+ .text-body,
+ p,
+ td,
+ th,
+ .text-page-title,
+ .summary-value {
+   user-select: text;
+   -webkit-user-select: text;
+   cursor: auto;
+ }
+ 
+ /* Los elementos interactivos siempre deben verse "clickeables", nunca de
+    texto — sin esto, algunos navegadores heredan cursor:text de un padre
+    con user-select:text (ej. una celda de tabla que contiene un botón). */
+ button,
+ .v-btn,
+ a,
+ [role="button"] {
+   cursor: pointer;
+ }
+ 
+ 
+ /* =============================================
+    CLASES TIPOGRÁFICAS PERSONALIZADAS
+    ============================================= */
+ 
+ // Título principal de página (30px bold)
+ .text-page-title {
+   font-family: Poppins;
+   font-weight: 700;
+   
+   font-size: 30px;
+   line-height: 100%;
+   letter-spacing: 0;
+ }
+ 
+ // Subtítulo / texto de ayuda (10px light)
+ .text-subtitle {
+   font-family: Poppins;
+   font-weight: 300;
+   font-size: 12px;
+   line-height: 100%;
+   letter-spacing: 0;
+ }
+ 
+ // Título de sección (20px bold)
+ .text-section-title {
+   font-family: Poppins;
+   font-weight: 700;
+   font-size: 20px;
+   line-height: 100%;
+   letter-spacing: 0;
+ }
+ 
+ // Etiquetas de formulario / textos pequeños (10px semibold)
+ .text-label {
+   font-family: Poppins;
+   font-weight: 600;
+   font-size: 12px;
+   line-height: 100%;
+   letter-spacing: 0;
+ }
+ 
+ // Texto normal / descripciones (10px regular)
+ .text-body-small {
+   font-family: Poppins;
+   font-weight: 400;
+   font-size: 12px;
+   line-height: 100%;
+   letter-spacing: 0;
+ }
+ 
+ // Texto de botones (12px semibold)
+ .text-button {
+   font-family: Poppins;
+   font-weight: 600;
+   font-size: 12px;
+   line-height: 100%;
+   letter-spacing: 0;
+ }
+ 
+ // Título de subsección (20px semibold)
+ .text-subsection-title {
+   font-family: Poppins;
+   font-weight: 600;
+   font-size: 20px;
+   line-height: 100%;
+   letter-spacing: 0;
+ }
+ 
+ /**
+  * Botones
+  */
+ .btn.btn-primary {
+   background-color: $primary-color;
+   padding: 0.5rem 1em;
+   border-radius: 50px;
+   color: $white;
+ }
+ 
+ .btn.btn-secondary {
+   background-color: $secondary-color;
+   padding: 0.5rem 1em;
+   border-radius: 50px;
+   color: $white;
+ }
+ 
+ /**
+  * UI
+  */
+ header {
+   height: 89.45px;
+   background-color: #e0e5f1;
+ }
+ 
+ main {
+   min-height: calc(100vh - 89.45px - 124px);
+ }
+ 
+ footer {
+   height: 91.5px;
+ }
+ 
+ a {
+   text-decoration: none;
+ }
+ 
+ .warning {
+   color: $status-finalizado;
+ }
+ /* ===== Estilos de cabecera (hero) elegibles desde Ajustes ===== */
+
+/* ------------------------------------------------------------
+   ESTILO 1 — Sólido
+   Fondo: #1C8686 (sin degradado)
+   Texto: #FFFFFF (se conserva la opacidad original donde la tenía)
+   Botón: fondo #FFF
+   ------------------------------------------------------------ */
+.hero.hero--solido {
+  background: #1C8686 !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.hero.hero--solido .hero__bg {
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.10), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(255, 255, 255, 0.06), transparent 40%) !important;
+}
+
+.hero.hero--solido .hero__title { color: #fff !important; }
+.hero.hero--solido .hero__sub,
+.hero.hero--solido .hero__subtitle { color: #fff !important; opacity: 0.85; }
+.hero.hero--solido .hero__eyebrow {
+  color: #fff !important;
+  background: transparent !important;
+  padding: 0 !important;
+  opacity: 0.75;
+}
+.hero.hero--solido .hero__cta {
+  background: #fff !important;
+  color: #1C8686 !important;
+}
+
+/* ------------------------------------------------------------
+   ESTILO 2 — Degradado
+   Fondo: linear-gradient(135deg, #235454 0%, #1C8686 100%)
+   Texto: #FFFFFF (se conserva la opacidad original donde la tenía)
+   Botón: fondo #FFF
+   ------------------------------------------------------------ */
+.hero.hero--degradado {
+  background: linear-gradient(135deg, #235454 0%, #1C8686 100%) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.hero.hero--degradado .hero__bg {
+  background-image:
+    radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.10), transparent 45%),
+    radial-gradient(circle at -10% 120%, rgba(255, 255, 255, 0.06), transparent 40%) !important;
+}
+
+.hero.hero--degradado .hero__title { color: #fff !important; }
+.hero.hero--degradado .hero__sub,
+.hero.hero--degradado .hero__subtitle { color: #fff !important; opacity: 0.85; }
+.hero.hero--degradado .hero__eyebrow {
+  color: #fff !important;
+  background: transparent !important;
+  padding: 0 !important;
+  opacity: 0.75;
+}
+.hero.hero--degradado .hero__cta {
+  background: #fff !important;
+  color: #1C8686 !important;
+}
+
+/* ------------------------------------------------------------
+   ESTILO 3 — Claro (sin degradado)
+   Fondo: #E6F4F4 (teal muy claro, sólido)
+   Texto: #235454
+   Botón: fondo #1C8686 / texto #FFF
+   ------------------------------------------------------------ */
+.hero.hero--claro {
+  background: #E6F4F4 !important;
+  border: 1px solid #CDE8E8 !important;
+  color: #235454 !important;
+}
+
+/* Sin degradado: se desactiva el overlay decorativo */
+.hero.hero--claro .hero__bg {
+  background-image: none !important;
+}
+
+.hero.hero--claro .hero__title { color: #235454 !important; }
+.hero.hero--claro .hero__sub,
+.hero.hero--claro .hero__subtitle { color: #235454 !important; opacity: 1; }
+.hero.hero--claro .hero__eyebrow {
+  display: inline-block;
+  color: #1C8686 !important;
+  background: rgba(28, 134, 134, 0.10) !important;
+  padding: 4px 10px !important;
+  border-radius: 999px;
+  opacity: 1;
+}
+.hero.hero--claro .hero__cta {
+  background: #1C8686 !important;
+  color: #fff !important;
+}
