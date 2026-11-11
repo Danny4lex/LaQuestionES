@@ -287,6 +287,7 @@ import {
   getSurveyQuestions,
   getQuestionOptions,
 } from "../services/surveyApi";
+import { markSurveyCompleted } from "../utils/completedSurveys";
 
 const route = useRoute();
 const router = useRouter();
@@ -379,6 +380,7 @@ async function enviar() {
       }),
     };
     const result = await enviarRespuestas(id, payload);
+    markSurveyCompleted(survey.value);
     success.value = result?.message || "Tus respuestas han sido recibidas satisfactoriamente.";
   } catch (e) {
     console.error("Error al enviar respuestas:", e);

@@ -48,7 +48,7 @@ Portal Ciudadano de Encuestas Públicas desarrollado con **Ionic 8 + Vue 3**, op
 
 - **Portal Público Ciudadano:** Sin barreras de autenticación para los encuestados.
 - **Iconografía Minimalista:** Integración con **Ionicons** en modo outline.
-- **Métricas Interactivas:** Filtro instantáneo al tocar tarjetas de estadísticas (Total, Activas, Finalizadas).
+- **Métricas Interactivas:** Filtro instantáneo al tocar tarjetas de estadísticas (Activas, Realizadas), con guardado local del historial de encuestas completadas por el ciudadano.
 - **Formulario Táctil:**
   - Preguntas Sí/No con botones segmentados de un toque.
   - Opciones de selección única y múltiple en tarjetas táctiles.
