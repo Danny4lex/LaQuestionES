@@ -361,30 +361,75 @@ onMounted(async () => {
   }
 });
 
+function isQuestionAnswered(q) {
+  const v = answers[q.id];
+  if (isSingle(q)) return v != null && v !== "";
+  if (isMultiple(q)) return Array.isArray(v) && v.length > 0;
+  if (typeof v === "boolean") return true;
+  if (typeof v === "number") return !Number.isNaN(v);
+  if (typeof v === "string") return v.trim().length > 0;
+  return v != null;
+}
+
+function buildAnswerPayload(q) {
+  const v = answers[q.id];
+  if (isSingle(q)) return { question_id: q.id, option_ids: [v] };
+  if (isMultiple(q)) return { question_id: q.id, option_ids: [...v] };
+  return { question_id: q.id, value: typeof v === "string" ? v.trim() : v };
+}
+
 async function enviar() {
-  sending.value = true;
   error.value = "";
   success.value = "";
+
+  const name = identity.name?.trim() || "";
+  const email = identity.email?.trim() || "";
+  const phone = identity.phone?.trim() || "";
+
+  if (requiresIdentity.value && (!name || !email)) {
+    error.value = "Ingresa tu nombre completo y correo electrónico para continuar.";
+    return;
+  }
+
+  const missingMandatory = questions.value.filter(
+    (q) => q.is_mandatory && !isQuestionAnswered(q)
+  );
+  if (missingMandatory.length > 0) {
+    error.value =
+      missingMandatory.length === 1
+        ? "Falta responder 1 pregunta obligatoria antes de enviar."
+        : `Faltan responder ${missingMandatory.length} preguntas obligatorias antes de enviar.`;
+    return;
+  }
+
+  const answeredPayload = questions.value
+    .filter((q) => isQuestionAnswered(q))
+    .map((q) => buildAnswerPayload(q));
+
+  if (answeredPayload.length === 0) {
+    error.value = "Responde al menos una pregunta antes de enviar la encuesta.";
+    return;
+  }
+
+  sending.value = true;
   try {
     const payload = {
       ...(requiresIdentity.value
-        ? { name: identity.name, email: identity.email, phone: identity.phone }
+        ? { name, email, phone: phone || null }
         : { anonymous: true }),
-      answers: questions.value.map((q) => {
-        const v = answers[q.id];
-        const a = { question_id: q.id };
-        if (isSingle(q)) a.option_ids = v == null || v === "" ? [] : [v];
-        else if (isMultiple(q)) a.option_ids = Array.isArray(v) ? v : [];
-        else a.value = v ?? null;
-        return a;
-      }),
+      answers: answeredPayload,
     };
     const result = await enviarRespuestas(id, payload);
     markSurveyCompleted(survey.value);
     success.value = result?.message || "Tus respuestas han sido recibidas satisfactoriamente.";
   } catch (e) {
     console.error("Error al enviar respuestas:", e);
+    const validationErrors = e.response?.data?.errors;
+    const firstFieldError = validationErrors
+      ? Object.values(validationErrors).flat()[0]
+      : "";
     error.value =
+      firstFieldError ||
       e.response?.data?.message ||
       `No se pudieron enviar las respuestas. Verifica que las preguntas obligatorias estén contestadas.`;
   } finally {
