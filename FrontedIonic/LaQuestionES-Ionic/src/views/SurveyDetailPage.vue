@@ -86,6 +86,16 @@
                   {{ survey.status?.name || (canRespond ? 'Activa' : 'Finalizada') }}
                 </span>
               </div>
+
+              <div v-if="completedRecord" class="info-row">
+                <span class="info-label">
+                  <ion-icon :icon="checkmarkDoneOutline" class="row-icon" />
+                  Tu participación:
+                </span>
+                <span class="badge-status badge-status--completed">
+                  Realizada ({{ formatCompletedDate(completedRecord.completedAt) }})
+                </span>
+              </div>
             </div>
           </div>
 
@@ -164,6 +174,7 @@ import {
   timeOutline,
   alertCircleOutline,
   shieldCheckmarkOutline,
+  checkmarkDoneOutline,
 } from "ionicons/icons";
 import {
   obtenerEncuestaPublica,
@@ -172,6 +183,10 @@ import {
   getSurveyQuestions,
   getQuestionOptions,
 } from "../services/surveyApi";
+import {
+  getCompletedSurveyRecord,
+  formatCompletedDate,
+} from "../utils/completedSurveys";
 
 const route = useRoute();
 const router = useRouter();
@@ -180,6 +195,8 @@ const id = route.params.id;
 const survey = ref(null);
 const loading = ref(false);
 const error = ref("");
+
+const completedRecord = computed(() => getCompletedSurveyRecord(id));
 
 const questions = computed(() => getSurveyQuestions(survey.value));
 const estimatedMinutes = computed(() => Math.max(1, Math.ceil(questions.value.length * 0.6)));
@@ -373,6 +390,11 @@ onMounted(async () => {
 .badge-status--closed {
   background: #f1f5f9;
   color: #64748b;
+}
+
+.badge-status--completed {
+  background: #dcfce7;
+  color: #166534;
 }
 
 /* ================= Botón Acción ================= */
