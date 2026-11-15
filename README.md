@@ -1,46 +1,44 @@
-# 📋 LaQuestionES — Sistema Integral de Gestión de Encuestas e Indicadores Institucionales
+# LaQuestionES - Sistema de Gestion de Encuestas e Indicadores
 
-> **Proyecto Final Interdisciplinario**  
-> Materias: **UFDS, Metodologías de Desarrollo de Software y Desarrollo de Aplicaciones Móviles**  
-> Repositorio: `Danny4lex/LaQuestionES` | Rama principal: `main`
+Proyecto final de las materias: UFDS, Metodologias de Desarrollo de Software y Desarrollo de Aplicaciones Moviles.
 
 ---
 
-## 🌟 Descripción General del Proyecto
+## Descripcion del Proyecto
 
-**LaQuestionES** es una solución tecnológica integral diseñada para centralizar la creación, distribución, recolección y análisis estadístico de encuestas públicas y privadas con enfoque en instituciones, organizaciones del sector público y entidades multisectoriales.
+LaQuestionES es una plataforma para la creacion, distribucion, recoleccion y analisis estadistico de encuestas publicas y privadas para instituciones y organizaciones.
 
-El ecosistema está construido bajo una **arquitectura desacoplada y modular** que consta de tres piezas principales trabajando en sinergia:
+El sistema esta dividido en tres componentes principales:
 
-1. **Backend (API RESTful):** Desarrollado en **Laravel 10**, centraliza la lógica de negocio, autenticación JWT, control de accesos basado en roles (RBAC), auditoría completa, generación de códigos QR vectoriales y exportación de reportes analíticos en PDF y Excel.
-2. **Frontend Web Administrativo:** Desarrollado con **Vue 3, Vuetify y Pinia**, diseñado para los administradores y encuestadores que gestionan el ciclo de vida de las encuestas, diseñan formularios dinámicos con *drag & drop*, revisan métricas en tiempo real y gestionan catálogos institucionales.
-3. **Frontend Móvil (Portal Ciudadano):** Desarrollado con **Ionic 8 + Vue 3**, una aplicación móvil responsiva (orientada a smartphones y tablets) para que los encuestados y ciudadanos participen de forma ágil, táctil y sin fricciones en las encuestas públicas o mediante invitaciones.
+1. **Backend (API REST):** Desarrollado en **Laravel 10**, encargado de la logica de negocio, autenticacion con JWT, control de roles y permisos (RBAC), auditoria de cambios, generacion de codigos QR y exportacion de reportes en PDF y Excel.
+2. **Frontend Web (Panel Administrativo):** Desarrollado en **Vue 3** con **Vuetify** y **Pinia**. Es el panel utilizado por administradores y encuestadores para disenar formularios dinamicos, gestionar estados de encuestas, ver metricas en tiempo real y administrar catalogos.
+3. **Frontend Movil (App / Portal Ciudadano):** Desarrollado en **Ionic 8** con **Vue 3**. Es una interfaz adaptada a dispositivos moviles para que los usuarios o ciudadanos respondan encuestas publicas de manera rapida y tactil sin necesidad de registro obligatorio, guardando localmente el historial de encuestas completadas.
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 ```mermaid
 flowchart TD
-    subgraph Clientes ["Capas de Presentación (Frontends)"]
-        WEB["💻 Panel Web Administrativo\n(Vue 3 + Vuetify + Pinia)\nPuerto: 5173\nRol: Admin / Encuestador"]
-        MOVIL["📱 Portal Móvil Ciudadano\n(Ionic 8 + Vue 3 + Ionicons)\nPuerto: 5174 / 0.0.0.0\nRol: Público / Encuestado"]
+    subgraph Clientes ["Frontends"]
+        WEB["Panel Web Administrativo\n(Vue 3 + Vuetify + Pinia)\nPuerto: 5173\nRol: Admin / Encuestador"]
+        MOVIL["App Movil de Encuestas\n(Ionic 8 + Vue 3)\nPuerto: 5174\nRol: Publico / Encuestado"]
     end
 
-    subgraph Servidor ["Capa de Servicios y Lógica (Backend)"]
-        API["⚙️ API RESTful Laravel 10\n(PHP 8.1+ / Sanctum / JWT)\nPuerto: 8000"]
-        AUTH["🔐 Módulo de Autenticación & RBAC\n(Tokens JWT / Permisos)"]
-        MOTOR["📝 Motor Dinámico de Encuestas\n(Secciones, Preguntas, Opciones)"]
-        REPORTES["📊 Motor de Reportes & Exportaciones\n(DomPDF + Maatwebsite Excel)"]
-        QR["📲 Generador de Códigos QR\n(SimpleSoftwareIO SVG)"]
+    subgraph Servidor ["Backend"]
+        API["API REST Laravel 10\n(PHP 8.1+ / JWT)\nPuerto: 8000"]
+        AUTH["Modulo de Autenticacion y Roles"]
+        MOTOR["Motor de Encuestas y Preguntas"]
+        REPORTES["Modulo de Reportes (PDF / Excel)"]
+        QR["Generador de Codigos QR"]
     end
 
-    subgraph Persistencia ["Capa de Datos"]
-        BD[("🗄️ Base de Datos MySQL / MariaDB\n`encuestas_mc`")]
+    subgraph BaseDatos ["Base de Datos"]
+        BD[("MySQL / MariaDB\nBase de datos: encuestas_mc")]
     end
 
-    WEB -->|"Consumo API privada /admin\n(Bearer JWT Token)"| API
-    MOVIL -->|"Consumo API pública /public\ny autenticada"| API
+    WEB -->|"Peticiones administrativas\n(Header Authorization: Bearer JWT)"| API
+    MOVIL -->|"Peticiones publicas y autenticadas"| API
 
     API --> AUTH
     API --> MOTOR
@@ -55,113 +53,100 @@ flowchart TD
 
 ---
 
-## 📂 Estructura del Repositorio
+## Estructura del Repositorio
 
 ```text
 LaQuestionES/
 │
 ├── backend/                       # API RESTful en Laravel 10 (PHP 8.1+)
-│   ├── app/                       # Modelos, Controladores, Middlewares, Políticas
-│   ├── config/                    # Configuraciones de Laravel, JWT, PDF, etc.
-│   ├── database/                  # Migraciones, factories y seeders demostrativos
+│   ├── app/                       # Modelos, Controladores y Middlewares
+│   ├── config/                    # Configuracion general
+│   ├── database/                  # Migraciones y seeders
 │   ├── routes/
-│   │   └── api.php                # Definición de rutas públicas y administrativas
-│   ├── composer.json              # Dependencias de PHP / Laravel
+│   │   └── api.php                # Definicion de endpoints de la API
+│   ├── composer.json              # Dependencias de PHP
 │   └── .env                       # Variables de entorno del backend
 │
-├── frontend/                      # Panel Web Administrativo (Vue 3 + Vuetify + Vite)
+├── frontend/                      # Panel Web de Administracion (Vue 3 + Vite)
 │   ├── src/
-│   │   ├── views/                 # Páginas: Dashboard, Constructor, Reportes, Catálogos
-│   │   ├── components/            # Componentes reutilizables, modales, widgets
-│   │   ├── services/              # Clientes HTTP (Axios) para consumo de la API
-│   │   ├── stores/                # Estados globales con Pinia (Auth, Encuestas)
-│   │   └── router/                # Rutas y guardias de navegación web
-│   ├── vite.config.js             # Configuración de Vite con proxy hacia :8000
+│   │   ├── views/                 # Pantallas: Dashboard, Constructor, Reportes, Catalogos
+│   │   ├── components/            # Componentes reutilizables
+│   │   ├── services/              # Consumo de API con Axios
+│   │   ├── stores/                # Estados de Pinia
+│   │   └── router/                # Rutas web
+│   ├── vite.config.js             # Configuracion de Vite con proxy hacia el puerto 8000
 │   └── package.json               # Dependencias de Node.js
 │
-├── FrontedIonic/LaQuestionES-Ionic/ # Aplicación Móvil Ciudadana (Ionic 8 + Vue 3)
+├── FrontedIonic/LaQuestionES-Ionic/ # App Movil (Ionic 8 + Vue 3)
 │   ├── src/
-│   │   ├── views/                 # Vistas móviles: Lista, Detalle, Responder Encuesta
-│   │   ├── services/              # Conexión al backend y API pública
-│   │   ├── utils/                 # Manejo de encuestas completadas en almacenamiento local
-│   │   ├── theme.css              # Paleta de colores y estilos institucionales
-│   │   └── router/                # Navegación móvil con Ionic Vue Router
-│   ├── vite.config.js             # Configuración Vite optimizada para dispositivos móviles
+│   │   ├── views/                 # Pantallas moviles: Lista, Detalle, Responder
+│   │   ├── services/              # Consumo de la API publica
+│   │   ├── utils/                 # Manejo de encuestas completadas en LocalStorage
+│   │   └── router/                # Navegacion movil
+│   ├── vite.config.js             # Configuracion de Vite para la app movil
 │   └── package.json               # Dependencias de Ionic y Vue
 │
-├── encuestas_mc.sql               # Dump SQL completo con estructura y datos iniciales
-├── .gitignore                     # Exclusiones de Git
-└── README.md                      # Documentación general del proyecto
+├── encuestas_mc.sql               # Respaldo completo de la base de datos
+├── .gitignore                     # Archivos ignorados por Git
+└── README.md                      # Documentacion del proyecto
 ```
 
 ---
 
-## 🎯 Roles y Módulos de la Solución
+## Funcionalidades Principales
 
-### 1. ⚙️ Backend (Laravel 10 API)
-- **Control de Acceso Granular (RBAC):** Roles de `Administrador`, `Encuestador` y `Encuestado`.
-- **Constructor Jerárquico:** Encuesta ➔ Secciones ➔ Preguntas (Texto, Opción Única, Selección Múltiple, Escala de Satisfacción 1-5, Sí/No) ➔ Opciones.
-- **Flujo de Aprobación y Estados:** Borrador ➔ En Revisión ➔ Publicada ➔ Cerrada. Incluye sistema de notas y observaciones por sección ("papelito" de correcciones).
-- **Distribución de Encuestas:** Vía enlace público, código QR dinámico descargable (formato SVG), o por invitaciones a grupos/organizaciones con tokens individuales únicos.
-- **Auditoría Integral:** Registro automático de historial de cambios (*change logs*) y sesiones activas (*session logs*).
-- **Métricas y Reportería:** Cálculo de índices de satisfacción institucional, reportes desagregados por departamento, y descargas directas en formato **PDF** y **Excel (.xlsx)**.
+### Backend (Laravel 10)
+- Control de acceso por roles (Administrador, Encuestador, Encuestado).
+- Estructura dinamica de encuestas (Secciones, Preguntas con tipos texto, opcion multiple, seleccion unica, si/no y escala del 1 al 5).
+- Flujo de estados de encuestas (Borrador, En revision, Publicada, Cerrada).
+- Distribucion por enlace publico, codigo QR descargable (SVG) y envio de invitaciones por correo.
+- Registro de auditoria de cambios (Change logs) y sesiones de usuario.
+- Generacion y descarga de reportes en PDF y hojas de calculo Excel (.xlsx).
 
-### 2. 💻 Frontend Web (Vue 3 - Panel Administrativo)
-- **Dashboard Estadístico:** Gráficos de barras, líneas y donas alimentados por Chart.js con KPIs en tiempo real.
-- **Diseñador de Encuestas Visual:** Permite reorganizar secciones y preguntas mediante *drag & drop*, configurar obligatoriedad y agregar opciones dinámicamente.
-- **Centro de Distribución:** Generación de enlaces públicos, códigos QR imprimibles y envíos de correo.
-- **Gestión Institucional:** Árbol jerárquico de Unidades Organizacionales y catálogos paramétricos (tipos, estados y categorías).
-- **Resultados y Pestaña por Encuestado:** Visualización detallada de respuestas individuales y exportación de reportes ejecutivos.
+### Frontend Web (Vue 3)
+- Panel de control principal con graficos interactivos mediante Chart.js.
+- Editor visual de encuestas para organizar y reordenar secciones y preguntas con drag and drop.
+- Gestion de unidades organizacionales y catalogos del sistema.
+- Visualizacion detallada de respuestas individuales y metricas consolidadas.
 
-### 3. 📱 Frontend Móvil (Ionic 8 - Portal Ciudadano)
-- **Experiencia Táctil (Mobile-First):** Diseñada específicamente para pantallas táctiles con botones ergonómicos, tarjetas interactivas e iconografía con **Ionicons**.
-- **Acceso Sin Fricción:** Portal ciudadano público para responder encuestas sin necesidad de registro previo obligatorio.
-- **Formularios Dinámicos Táctiles:**
-  - Preguntas Sí/No con selector segmentado de un solo toque.
-  - Escalas numéricas táctiles de 1 a 5 con retroalimentación visual de color.
-  - Barra de progreso interactiva con porcentaje y conteo de preguntas respondidas en tiempo real.
-- **Persistencia Local:** Historial de encuestas realizadas guardadas en el dispositivo móvil para evitar duplicidad y permitir revisión de estatus.
-- **Diseño Responsivo Multiplataforma:** Compatible con navegadores móviles, preparado para despliegue en Android / iOS mediante Capacitor.
+### Frontend Movil (Ionic 8)
+- Diseno pensado para pantallas tactiles de telefonos y tabletas.
+- Listado de encuestas activas con filtro directo de completadas.
+- Formulario de respuesta optimizado con botones de seleccion rapida y barra de progreso en vivo.
+- Almacenamiento local del historial para identificar que encuestas ya fueron respondidas en el dispositivo.
 
 ---
 
-## 🚀 Requisitos Previos de Instalación
+## Requisitos del Sistema
 
-Asegúrate de contar con las siguientes herramientas instaladas en tu equipo de desarrollo:
-
-- **PHP**: Versión `>= 8.1` o `8.2` (con extensiones `pdo_mysql`, `mbstring`, `openssl`, `gd`, `fileinfo`).
-- **Composer**: Versión `2.x`.
-- **Node.js**: Versión `18.x` o `20.x` LTS.
-- **npm**: Versión `9.x` o superior.
-- **Gestor de Base de Datos**: MySQL `8.x` o MariaDB `10.4+` (XAMPP, Laragon, Docker o servicio nativo).
-- **Git**: Para el control de versiones.
+- PHP 8.1 o superior
+- Composer 2.x
+- Node.js 18.x o 20.x y npm
+- MySQL 8.x o MariaDB 10.4+ (XAMPP, Laragon o Docker)
+- Git
 
 ---
 
-## 🛠️ Guía de Puesta en Marcha (Paso a Paso)
+## Instalacion y Configuracion
 
-### Paso 1: Configurar la Base de Datos
-
-1. Inicia tu servidor de MySQL (por ejemplo desde el panel de XAMPP o Laragon).
-2. Abre tu cliente SQL favorito (phpMyAdmin, DBeaver, HeidiSQL o terminal) y crea la base de datos:
+### 1. Base de datos
+1. Iniciar el servicio de MySQL o MariaDB.
+2. Crear una base de datos llamada `encuestas_mc`:
    ```sql
    CREATE DATABASE encuestas_mc CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
-3. Importa el archivo `encuestas_mc.sql` ubicado en la raíz del proyecto dentro de la base de datos `encuestas_mc` recién creada.
+3. Importar el archivo `encuestas_mc.sql` ubicado en la raiz del proyecto en la base de datos recien creada.
 
----
-
-### Paso 2: Configurar y Levantar el Backend (Laravel)
-
-1. Abre una terminal y navega a la carpeta del backend:
+### 2. Backend (Laravel)
+1. Abrir una terminal y entrar a la carpeta:
    ```bash
    cd backend
    ```
-2. Instala las dependencias de PHP:
+2. Instalar dependencias:
    ```bash
    composer install
    ```
-3. Verifica o configura el archivo `.env` (si no existe, copia `.env.example` a `.env`):
+3. Revisar el archivo `.env` con los datos de conexion:
    ```env
    APP_NAME=LaQuestionES
    APP_ENV=local
@@ -176,118 +161,85 @@ Asegúrate de contar con las siguientes herramientas instaladas en tu equipo de 
 
    JWT_SECRET=JmoabNG0oJGpjOlp0ObyfuNljPHbktOMK7tRusXA6R3sppSvVFzvyn7gzzk2vTaG
    ```
-4. Genera la llave de la aplicación y la clave JWT (en caso de iniciar desde un `.env` limpio):
+4. Generar claves en caso de iniciar con un entorno limpio:
    ```bash
    php artisan key:generate
    php artisan jwt:secret
    ```
-5. *(Opcional)* Si prefieres recrear la estructura y datos de prueba desde cero mediante migraciones:
-   ```bash
-   php artisan migrate:fresh --seed
-   ```
-6. Inicia el servidor de desarrollo:
+5. Iniciar el servidor:
    ```bash
    php artisan serve --port=8000
    ```
-   > 🟢 **Backend activo en:** `http://127.0.0.1:8000`
+   El backend estara disponible en: `http://127.0.0.1:8000`
 
----
-
-### Paso 3: Configurar y Levantar el Frontend Web Administrativo (Vue 3)
-
-1. Abre una **segunda terminal** y dirígete a la carpeta `frontend`:
+### 3. Frontend Web (Vue 3)
+1. Abrir otra terminal y entrar a la carpeta:
    ```bash
    cd frontend
    ```
-2. Instala las dependencias de Node.js:
+2. Instalar dependencias:
    ```bash
    npm install
    ```
-3. Verifica el archivo `.env`:
-   ```env
-   VITE_BACKEND_URL=http://127.0.0.1:8000
-   VITE_API_BASE_URL=http://127.0.0.1:5173/api
-   ```
-   *(Nota: El archivo `vite.config.js` ya incluye un proxy interno que redirige las peticiones `/api` a `http://127.0.0.1:8000` transparentemente para evitar problemas de CORS).*
-4. Inicia el servidor de desarrollo web:
+3. Iniciar el entorno de desarrollo:
    ```bash
    npm run dev
    ```
-   > 🟢 **Panel Web activo en:** `http://localhost:5173`
+   El panel web estara disponible en: `http://localhost:5173`
 
----
-
-### Paso 4: Configurar y Levantar la Aplicación Móvil (Ionic 8)
-
-1. Abre una **tercera terminal** y navega a la carpeta móvil:
+### 4. Frontend Movil (Ionic 8)
+1. Abrir una tercera terminal y entrar a la carpeta:
    ```bash
    cd FrontedIonic/LaQuestionES-Ionic
    ```
-2. Instala las dependencias:
+2. Instalar dependencias:
    ```bash
    npm install
    ```
-3. Verifica el archivo `.env`:
-   ```env
-   VITE_BACKEND_URL=http://127.0.0.1:8000
-   ```
-4. Inicia la aplicación móvil en modo desarrollo:
+3. Iniciar el entorno de desarrollo en un puerto secundario:
    ```bash
-   # Si el puerto 5173 ya está en uso por la web, Vite usará automáticamente el 5174:
    npm run dev -- --port 5174
    ```
-   > 🟢 **Portal Móvil activo en:** `http://localhost:5174` (o la IP local mostrada en consola para probar desde un teléfono conectado a la misma red Wi-Fi).
+   La aplicacion movil estara disponible en: `http://localhost:5174` (o en la IP de red local para abrirla desde un telefono conectado a la misma red).
 
 ---
 
-## 🔑 Roles de Usuario y Autenticación
+## Roles y Acceso
 
-El sistema cuenta con un modelo de control de acceso basado en roles (RBAC) con distintos niveles de privilegio para la gestión de encuestas:
+- **Administrador:** Gestion global de encuestas, usuarios, aprobaciones, catalogos y reportes.
+- **Encuestador:** Creacion y gestion de encuestas de su dependencia o area asignada.
+- **Encuestado:** Acceso a responder encuestas publicas o privadas asignadas.
 
-| Rol | Tipo de Acceso | Alcance y Permisos Principales |
-| :--- | :--- | :--- |
-| **Administrador** | Panel Web Administrativo | Acceso total al sistema: creación, moderación, aprobación, publicación y eliminación de encuestas, gestión de catálogos paramétricos, auditoría y reportería global ejecutiva. |
-| **Encuestador** | Panel Web Administrativo | Creación y administración de encuestas de su dependencia o unidad organizacional; envío a revisión y publicación tras aprobación. |
-| **Encuestado** | Portal Móvil / Web | Perfil para responder encuestas institucionales públicas o privadas por invitación. |
-
-> 💡 **Nota:** Para el **Portal Ciudadano Móvil**, el acceso es abierto y no se requiere inicio de sesión para participar en encuestas de visibilidad **Pública**. Para acceder al panel administrativo web, se inicia sesión con las credenciales de usuario configuradas en la base de datos con rol de `Administrador` o `Encuestador`.
+*Nota:* Para responder encuestas publicas en la aplicacion movil no se necesita inicio de sesion. Para ingresar al panel web administrativo se utiliza una cuenta registrada con rol de Administrador o Encuestador.
 
 ---
 
-## 📡 Resumen de Endpoints Principales de la API
+## Endpoints Principales de la API
 
-La API REST expuesta por Laravel se divide en dos grandes áreas:
+### Rutas Publicas (Sin autenticacion)
+- `GET /api/public/surveys` - Listado de encuestas publicas activas.
+- `GET /api/public/surveys/{id}` - Estructura completa de una encuesta publica.
+- `POST /api/public/surveys/{id}/submit` - Envio de respuestas ciudadanas.
+- `GET /api/public/participants/{token}` - Consulta de encuesta privada por token.
+- `POST /api/public/participants/{token}/submit` - Envio de respuestas de encuesta privada.
 
-### 🟢 Zona Pública (`/api/public/*`) — Sin Autenticación
-- `GET /api/public/surveys` ➔ Listado de encuestas públicas activas.
-- `GET /api/public/surveys/{survey}` ➔ Obtiene la estructura completa de una encuesta pública.
-- `POST /api/public/surveys/{survey}/submit` ➔ Envío de respuestas anónimas ciudadanas.
-- `GET /api/public/participants/{token}` ➔ Consulta de encuesta privada por token de invitación.
-- `POST /api/public/participants/{token}/submit` ➔ Envío de respuestas de encuesta privada.
-
-### 🔒 Zona Administrativa (`/api/*`) — Requiere Bearer JWT
-- **Autenticación:**
-  - `POST /api/auth/login` ➔ Inicio de sesión y emisión de token JWT.
-  - `POST /api/auth/userInfo` ➔ Perfil del usuario autenticado y roles de encuestas.
-- **Gestión de Encuestas:**
-  - `GET /api/surveys` \| `POST /api/surveys` ➔ Listar y crear encuestas.
-  - `PUT /api/surveys/{id}/structure` ➔ Sincronización masiva de secciones y preguntas.
-  - `PATCH /api/surveys/{id}/status` ➔ Transición de estados (Borrador, Publicada, etc.).
-  - `POST /api/surveys/{id}/duplicate` ➔ Duplicación/clonación rápida de encuestas existentes.
-- **Códigos QR y Distribución:**
-  - `GET /api/surveys/{id}/qr-code/image` ➔ Genera el código QR vectorial descargable.
-  - `POST /api/email-notifications/send` ➔ Disparo de correos con enlaces únicos.
-- **Métricas y Reportes:**
-  - `GET /api/dashboard/summary` ➔ Métricas clave del sistema para el Dashboard.
-  - `GET /api/reports/surveys/{id}/results` ➔ Resultados estadísticos agregados por pregunta.
-  - `GET /api/reports/surveys/{id}/export-pdf` ➔ Descarga directa de reporte en PDF.
-  - `GET /api/reports/surveys/{id}/export-excel` ➔ Descarga de hoja de cálculo en Excel.
+### Rutas Administrativas (Requieren Token JWT)
+- `POST /api/auth/login` - Autenticacion de usuario.
+- `POST /api/auth/userInfo` - Consulta del perfil y permisos del usuario logueado.
+- `GET /api/surveys` | `POST /api/surveys` - Listado y creacion de encuestas.
+- `PUT /api/surveys/{id}/structure` - Actualizacion de estructura de secciones y preguntas.
+- `PATCH /api/surveys/{id}/status` - Cambio de estado de la encuesta.
+- `GET /api/surveys/{id}/qr-code/image` - Generacion de codigo QR en formato SVG.
+- `GET /api/dashboard/summary` - Metricas globales del dashboard.
+- `GET /api/reports/surveys/{id}/results` - Resumen de resultados por pregunta.
+- `GET /api/reports/surveys/{id}/export-pdf` - Descarga del reporte en formato PDF.
+- `GET /api/reports/surveys/{id}/export-excel` - Descarga del reporte en formato Excel.
 
 ---
 
-## 👥 Equipo de Desarrollo y Contribuidores
+## Integrantes
 
-Proyecto desarrollado como entregable final integrador por:
+Proyecto desarrollado por:
 
 - **Genesis Lisbeth Aguilar Ramos**
 - **Carlos Francisco Hernández Villalta**
@@ -297,6 +249,6 @@ Proyecto desarrollado como entregable final integrador por:
 
 ---
 
-## 📄 Licencia
+## Licencia
 
-Este proyecto fue desarrollado con fines académicos y de demostración institucional bajo la licencia **MIT**. Consulta los archivos de cada subdirectorio para más información.
+Proyecto desarrollado con fines academicos bajo licencia MIT.
