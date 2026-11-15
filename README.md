@@ -289,8 +289,7 @@ La API REST expuesta por Laravel se divide en dos grandes áreas:
 
 Proyecto desarrollado como entregable final integrador por:
 
-- **Steven Quintanilla** — [@StevenQuinta35](https://github.com/StevenQuinta35)
-- **Claudia Menjívar** — [@cmenjivar21](https://github.com/cmenjivar21)
+- **Steven Quintanilla** — [@StevenQuinta35](https://github.com/cmenjivar21)
 - **Danny Menjívar** — [@Danny4lex](https://github.com/Danny4lex)
 - **Anderson Palma** — [@Palma0111](https://github.com/Palma0111)
 
