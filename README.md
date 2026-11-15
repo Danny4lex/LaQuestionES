@@ -8,7 +8,7 @@
 
 ## 🌟 Descripción General del Proyecto
 
-**LaQuestionES** es una solución tecnológica integral diseñada para centralizar la creación, distribución, recolección y análisis estadístico de encuestas públicas y privadas con enfoque en instituciones gubernamentales y organizacionales (orientado al contexto del Ministerio de Cultura de El Salvador).
+**LaQuestionES** es una solución tecnológica integral diseñada para centralizar la creación, distribución, recolección y análisis estadístico de encuestas públicas y privadas con enfoque en instituciones, organizaciones del sector público y entidades multisectoriales.
 
 El ecosistema está construido bajo una **arquitectura desacoplada y modular** que consta de tres piezas principales trabajando en sinergia:
 
@@ -240,17 +240,17 @@ Asegúrate de contar con las siguientes herramientas instaladas en tu equipo de 
 
 ---
 
-## 🔑 Credenciales de Prueba (Seeders)
+## 🔑 Roles de Usuario y Autenticación
 
-El sistema incluye cuentas preconfiguradas con distintos niveles de privilegio para validar todas las funcionalidades:
+El sistema cuenta con un modelo de control de acceso basado en roles (RBAC) con distintos niveles de privilegio para la gestión de encuestas:
 
-| Rol | Correo Electrónico | Contraseña | Alcance / Permisos |
-| :--- | :--- | :--- | :--- |
-| **Administrador** | `carlos.mendez@cultura.gob.sv` | `CulturaMC#2026` | Acceso total: creación, aprobación, eliminación, catálogos, auditoría y reportes globales. |
-| **Encuestador** | `ana.ramirez@cultura.gob.sv` | `CulturaMC#2026` | Gestión y creación de encuestas pertenecientes a su unidad organizacional (`Dirección General Ejecutiva`). |
-| **Encuestado** | `luis.portillo@cultura.gob.sv` | `CulturaMC#2026` | Usuario con perfil de respuesta para encuestas privadas institucionales. |
+| Rol | Tipo de Acceso | Alcance y Permisos Principales |
+| :--- | :--- | :--- |
+| **Administrador** | Panel Web Administrativo | Acceso total al sistema: creación, moderación, aprobación, publicación y eliminación de encuestas, gestión de catálogos paramétricos, auditoría y reportería global ejecutiva. |
+| **Encuestador** | Panel Web Administrativo | Creación y administración de encuestas de su dependencia o unidad organizacional; envío a revisión y publicación tras aprobación. |
+| **Encuestado** | Portal Móvil / Web | Perfil para responder encuestas institucionales públicas o privadas por invitación. |
 
-> 💡 **Nota:** Para el **Portal Ciudadano Móvil**, no se requiere iniciar sesión para participar en las encuestas con visibilidad **Pública**.
+> 💡 **Nota:** Para el **Portal Ciudadano Móvil**, el acceso es abierto y no se requiere inicio de sesión para participar en encuestas de visibilidad **Pública**. Para acceder al panel administrativo web, se inicia sesión con las credenciales de usuario configuradas en la base de datos con rol de `Administrador` o `Encuestador`.
 
 ---
 
@@ -289,9 +289,11 @@ La API REST expuesta por Laravel se divide en dos grandes áreas:
 
 Proyecto desarrollado como entregable final integrador por:
 
-- **Steven Quintanilla** — [@StevenQuinta35](https://github.com/cmenjivar21)
-- **Danny Menjívar** — [@Danny4lex](https://github.com/Danny4lex)
-- **Anderson Palma** — [@Palma0111](https://github.com/Palma0111)
+- **Genesis Lisbeth Aguilar Ramos**
+- **Carlos Francisco Hernández Villalta**
+- **Daniel Alexander Fuentes Mejia**
+- **Anderson Wilfredo Ramos Palma**
+- **Diego Esteban Rivas Flores**
 
 ---
 
